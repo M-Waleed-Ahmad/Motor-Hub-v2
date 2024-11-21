@@ -36,6 +36,9 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)/index" />
         <Stack.Screen name="(auth)/login" />
         <Stack.Screen name="(auth)/forgetPassword" />
+        <Stack.Screen name="(home)/homePage" />
+        <Stack.Screen name="(home)/setting" />
+        <Stack.Screen name="(auth)/PaymentSuccessConfo" />
         <Stack.Screen name="+not-found" />
         
         
