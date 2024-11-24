@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -12,10 +14,15 @@ import {
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();  
 
   const handleLogin = () => {
-    if (email === 'test@example.com' && password === 'password') {
-      Alert.alert('Login Successful');
+    console.log('Email:', email);
+    console.log('Password', password);  
+    if (email == '' && password == '') {
+      // Alert.alert('Login Successful');
+      router.replace("/homeUser"); 
+      console.log('Login Successful');
     } else {
       Alert.alert('Login Failed', 'Invalid email or password');
     }
@@ -23,7 +30,7 @@ const LoginScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/login.png')}
+      source={require('../assets/images/login.png')}
       style={styles.background}
     >
       <View style={styles.container}>
@@ -56,10 +63,16 @@ const LoginScreen = () => {
         <View style={styles.footer}>
           <Text style={styles.signupText}>
             Don't have an account? Want to{' '}
-            <Text style={styles.link}>SIGN UP</Text>
+            <Link href="/signup" style={styles.link}>
+              Sign Up
+            </Link>
+            {/* <Text style={styles.link}>SIGN UP</Text> */}
           </Text>
           <TouchableOpacity>
-            <Text style={styles.forgotText}>FORGOT PASSWORD?</Text>
+            <Link href="/forgotPassword" style={styles.forgotText}>
+              Forgot Password?
+            </Link>
+            {/* <Text style={styles.forgotText}>FORGOT PASSWORD?</Text> */}
           </TouchableOpacity>
         </View>
       </View>

@@ -31,14 +31,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="(auth)/index">
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
         {/* Define routes */}
-        <Stack.Screen name="(auth)/index" />
-        <Stack.Screen name="(auth)/login" />
-        <Stack.Screen name="(auth)/forgetPassword" />
-        <Stack.Screen name="+not-found" />
-        
-        
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />       
+        <Stack.Screen name="signup" />       
+        <Stack.Screen name="forgotPassword" />       
+        <Stack.Screen name="homeUser/home" />       
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>

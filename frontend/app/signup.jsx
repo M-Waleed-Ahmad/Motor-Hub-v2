@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import {
   View,
@@ -31,7 +32,7 @@ const SignUpScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/login.png')} // Adjust the path as per your project structure
+      source={require('../assets/images/login.png')} // Adjust the path as per your project structure
       style={styles.background}
     >
       <View style={styles.container}>
@@ -97,9 +98,9 @@ const SignUpScreen = () => {
         <View style={styles.footer}>
           <Text style={styles.loginText}>
             Already have an account?{' '}
-            <Text style={styles.link} onPress={() => Alert.alert('Navigate to Login')}>
-              LOGIN
-            </Text>
+            <Link href="/login" style={styles.link}>
+              Log In
+            </Link>
           </Text>
         </View>
       </View>

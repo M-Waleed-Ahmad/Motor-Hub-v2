@@ -24,7 +24,7 @@ const ForgetPasswordScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/login.png')}
+      source={require('../assets/images/login.png')}
       style={styles.background}
     >
       <View style={styles.container}>

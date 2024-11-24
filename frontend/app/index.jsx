@@ -7,7 +7,7 @@ const LandingScreen = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('./forgetPassword'); // File-based routing requires the path
+      router.replace('./login'); // File-based routing requires the path
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -15,7 +15,7 @@ const LandingScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/login.png')}
+      source={require('../assets/images/login.png')}
       style={styles.background}
     />
   );
