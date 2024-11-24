@@ -16,7 +16,7 @@ export default function RootLayout() {
 
   // Load custom fonts
   const [fontsLoaded] = useFonts({
-    SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../../../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -31,12 +31,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="home">
-        <Stack.Screen name="home" />
-        <Stack.Screen name="settings" />       
-        <Stack.Screen name="notifications" />       
-        <Stack.Screen name="profile/profileDashboard" />       
-        <Stack.Screen name="listings/carListings" />       
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="carListings">
+        <Stack.Screen name="carListings" />      
+        <Stack.Screen name="carDetails" />      
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>

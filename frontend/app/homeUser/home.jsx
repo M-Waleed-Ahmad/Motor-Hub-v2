@@ -76,16 +76,24 @@ const MotorHubScreen = () => {
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity>
-          <FontAwesome name="home" size={30} color="#00b4d8" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="car" size={30} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="plus-circle" size={30} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity>
+          <Link href="/homeUser/profile">
           <FontAwesome name="user" size={30} color="white" />
+          </Link>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Link href="/homeUser/listings/carListings">
+          <FontAwesome name="car" size={30} color="white" />
+          </Link>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Link href="/homeUser/home">
+          <FontAwesome name="home" size={30} color="#00b4d8" />
+          </Link>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Link href="/homeUser/notifications">
+          <FontAwesome name="bell" size={30} color="white" />
+          </Link>
         </TouchableOpacity>
         <TouchableOpacity >
           <Link href="homeUser/settings" style={styles.forgotText}>
