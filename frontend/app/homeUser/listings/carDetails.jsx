@@ -8,7 +8,7 @@ const VehicleDetails = () => {
   const vehicle = {
     name: "2019 Toyota Camry",
     condition: "Used",
-    price: 20000,
+    price: 10,
     model: "Camry XLE",
     location: "Los Angeles, CA",
     color: "White",
@@ -23,6 +23,16 @@ const VehicleDetails = () => {
   // Function to navigate back
   const handleBackPress = () => {
     router.back(); // Goes back to the previous screen
+  };
+  const handlebtn = () => {
+    if (vehicle.price) {
+      // Buy button
+      // alert('Vehicle purchased successfully!');
+      router.push('/homeUser/listings/paymentOptions');
+    } else {
+      // Bid button
+      router.push('/homeUser/listings/carBid', { vehicleName: vehicle.name });
+    }
   };
 
   return (
@@ -55,7 +65,7 @@ const VehicleDetails = () => {
         <Text style={styles.info}>📞 {vehicle.ownerContact || 'Not provided'}</Text>
 
         {/* Buy or Bid Button */}
-        <TouchableOpacity style={[styles.button, { backgroundColor: vehicle.price ? '#3498db' : '#2ecc71' }]}>
+        <TouchableOpacity onPress={handlebtn} style={[styles.button, { backgroundColor: vehicle.price ? '#3498db' : '#2ecc71' }]}>
           <Text style={styles.buttonText}>{vehicle.price ? 'Buy' : 'Bid'}</Text>
         </TouchableOpacity>
       </View>

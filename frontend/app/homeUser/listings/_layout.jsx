@@ -34,6 +34,11 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }} initialRouteName="carListings">
         <Stack.Screen name="carListings" />      
         <Stack.Screen name="carDetails" />      
+        <Stack.Screen name="carBid" />      
+        <Stack.Screen name="paymentOptions" />      
+        {/* <Stack.Screen name="paymentDetails" />       */}
+        <Stack.Screen name="paymentSuccess" />      
+        <Stack.Screen name="paymentFailure" />      
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
