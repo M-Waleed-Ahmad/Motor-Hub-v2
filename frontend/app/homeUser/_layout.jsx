@@ -37,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="notifications" />       
         <Stack.Screen name="profile/profileDashboard" />       
         <Stack.Screen name="listings/carListings" />       
+        <Stack.Screen name="listings/createNewListing" />       
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>

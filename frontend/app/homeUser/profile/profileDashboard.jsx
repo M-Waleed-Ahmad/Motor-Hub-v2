@@ -1,74 +1,116 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfilePage() {
+  const router = useRouter();
+
+  // State for user information
+  const [userInfo, setUserInfo] = useState({
+    name: 'Suneel Munj Lite',
+    phone: 'XXXX-XXXXXXX',
+    email: 'abc@gmail.com',
+    cnic: 'XXXXX-XXXXXXX-X',
+  });
+
+  // State for profile image
+  const [profileImage, setProfileImage] = useState(null);
+
+  // State to track editing mode
+  const [editingField, setEditingField] = useState(null);
+  const [tempValue, setTempValue] = useState('');
+
+  // Function to start editing a field
+  const startEditing = (field, value) => {
+    setEditingField(field);
+    setTempValue(value);
+  };
+
+  // Function to save changes
+  const saveChanges = () => {
+    setUserInfo((prev) => ({ ...prev, [editingField]: tempValue }));
+    setEditingField(null);
+  };
+
+  // Function to pick an image
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <FontAwesome name="user-circle" size={80} color="#fff" />
-          <Text style={styles.username}>Username</Text>
+          <TouchableOpacity onPress={pickImage}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <FontAwesome name="user-circle" size={80} color="#fff" />
+            )}
+          </TouchableOpacity>
+          <Text style={styles.username}>Profile</Text>
         </View>
 
         {/* User Info Section */}
         <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <FontAwesome name="user" size={20} color="#fff" />
-            <Text style={styles.infoText}>Name</Text>
-            <Text style={styles.infoValue}>Suneel Munj Lite</Text>
-            <TouchableOpacity>
-              <FontAwesome name="pencil" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.infoRow}>
-            <FontAwesome name="phone" size={20} color="#fff" />
-            <Text style={styles.infoText}>Phone No</Text>
-            <Text style={styles.infoValue}>XXXX-XXXXXXX</Text>
-            <TouchableOpacity>
-              <FontAwesome name="pencil" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.infoRow}>
-            <FontAwesome name="envelope" size={20} color="#fff" />
-            <Text style={styles.infoText}>Email</Text>
-            <Text style={styles.infoValue}>abc@gmail.com</Text>
-            <TouchableOpacity>
-              <FontAwesome name="pencil" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.infoRow}>
-            <FontAwesome name="id-card" size={20} color="#fff" />
-            <Text style={styles.infoText}>CNIC</Text>
-            <Text style={styles.infoValue}>XXXXX-XXXXXXX-X</Text>
-            <TouchableOpacity>
-              <FontAwesome name="pencil" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          {Object.keys(userInfo).map((field) => (
+            <View key={field} style={styles.infoRow}>
+              <FontAwesome
+                name={field === 'name' ? 'user' : field === 'phone' ? 'phone' : field === 'email' ? 'envelope' : 'id-card'}
+                size={20}
+                color="#fff"
+              />
+              <Text style={styles.infoText}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
+              {editingField === field ? (
+                <TextInput
+                  style={styles.editInput}
+                  value={tempValue}
+                  onChangeText={setTempValue}
+                  autoFocus
+                  onBlur={saveChanges}
+                />
+              ) : (
+                <Text style={styles.infoValue}>{userInfo[field]}</Text>
+              )}
+              <TouchableOpacity onPress={() => startEditing(field, userInfo[field])}>
+                <FontAwesome name="pencil" size={16} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ))}
         </View>
 
         {/* Navigation Buttons */}
         <View style={styles.buttonGrid}>
-            <View>
-          <TouchableOpacity style={styles.navButton}>
-            <Text style={styles.buttonText}>My Rentals</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton}>
-            <Text style={styles.buttonText}>My Favourites</Text>
-          </TouchableOpacity>
-            </View>
-            <View >
-          <TouchableOpacity style={styles.navButton}>
-            <Text style={styles.buttonText}>My Listings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton}>
-            <Text style={styles.buttonText}>My Bids</Text>
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myRentals')} style={styles.navButton}>
+              <Text style={styles.buttonText}>My Rentals</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myFavs')} style={styles.navButton}>
+              <Text style={styles.buttonText}>My Favourites</Text>
+            </TouchableOpacity>
           </View>
-
+          <View>
+            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myListings')} style={styles.navButton}>
+              <Text style={styles.buttonText}>My Listings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myBids')} style={styles.navButton}>
+              <Text style={styles.buttonText}>My Bids</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -76,27 +118,27 @@ export default function ProfilePage() {
       <View style={styles.bottomNav}>
         <TouchableOpacity>
           <Link href="/homeUser/profile">
-          <FontAwesome name="user" size={30} color="#00b4d8" />
+            <FontAwesome name="user" size={30} color="#00b4d8" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/listings/carListings">
-          <FontAwesome name="car" size={30} color="white" />
+            <FontAwesome name="car" size={30} color="white" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/home">
-          <FontAwesome name="home" size={30} color="white" />
+            <FontAwesome name="home" size={30} color="white" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/notifications">
-          <FontAwesome name="bell" size={30} color="white" />
+            <FontAwesome name="bell" size={30} color="white" />
           </Link>
         </TouchableOpacity>
-        <TouchableOpacity >
-          <Link href="homeUser/settings" style={styles.forgotText}>
-          <FontAwesome name="cog" size={30} color="white" />
+        <TouchableOpacity>
+          <Link href="/homeUser/settings">
+            <FontAwesome name="cog" size={30} color="white" />
           </Link>
         </TouchableOpacity>
       </View>
@@ -118,6 +160,11 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: 'center',
     marginBottom: 20,
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   username: {
     color: '#fff',
@@ -147,6 +194,13 @@ const styles = StyleSheet.create({
     color: '#aaa',
     fontSize: 16,
     flex: 2,
+  },
+  editInput: {
+    color: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#00b4d8',
+    flex: 2,
+    padding: 2,
   },
   buttonGrid: {
     flexDirection: 'row',

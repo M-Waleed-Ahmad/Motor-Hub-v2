@@ -33,6 +33,10 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }} initialRouteName="profileDashboard">
         <Stack.Screen name="profileDashboard" />       
+        <Stack.Screen name="myRentals" />       
+        <Stack.Screen name="myListings" />       
+        <Stack.Screen name="myBids" />       
+        <Stack.Screen name="myFavs" />       
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>

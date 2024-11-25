@@ -17,6 +17,9 @@ const MotorHubScreen = () => {
   const goToSettings = () => {
     router.replace("/homeUser/settings");
   }
+  const navigatetoCreate = ()=>{
+    router.replace("/homeUser/listings/createNewListing");
+  }
 
   return (
     <View style={styles.container}>
@@ -50,8 +53,10 @@ const MotorHubScreen = () => {
       />
 
       {/* Create New Listing Button */}
-      <TouchableOpacity style={styles.createListingButton}>
+      <TouchableOpacity style={styles.createListingButton} onPress={navigatetoCreate}>
+        <Link href="/homeUser/listings/createNewListing">
         <Text style={styles.createListingText}>Create New Listing</Text>
+        </Link>
       </TouchableOpacity>
 
       {/* Categories */}

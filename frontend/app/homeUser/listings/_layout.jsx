@@ -39,6 +39,8 @@ export default function RootLayout() {
         {/* <Stack.Screen name="paymentDetails" />       */}
         <Stack.Screen name="paymentSuccess" />      
         <Stack.Screen name="paymentFailure" />      
+        <Stack.Screen name="createNewListing" />      
+        {/* <Stack.Screen name="listingCreated" />       */}
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
