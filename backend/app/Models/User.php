@@ -28,9 +28,9 @@ class User extends Authenticatable
         'user_type',
     ];
 
-    public function listings()
+    public function vehicles()
     {
-        return $this->hasMany(Listing::class, 'user_id');
+        return $this->hasMany(Vehicle::class, 'user_id');
     }
 
     public function bids()

@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('listing_images', function (Blueprint $table) {
+        Schema::create('vehicle_images', function (Blueprint $table) {
             $table->id('image_id');
-            $table->foreignId('listing_id')->constrained('listings','listing_id')->onDelete('cascade');
+            $table->foreignId('vehicle_id')->constrained('vehicles','vehicle_id')->onDelete('cascade');
             $table->string('image_url', 255);
             $table->timestamps();
         });

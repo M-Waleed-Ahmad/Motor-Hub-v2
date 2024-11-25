@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rentals', function (Blueprint $table) {
             $table->id('rental_id');
-            $table->foreignId('listing_id')->nullable()->constrained('listings','listing_id')->onDelete('set null');
+            $table->foreignId('vehicle_id')->nullable()->constrained('vehicles','vehicle_id')->onDelete('set null');
             $table->foreignId('renter_id')->nullable()->constrained('users','user_id')->onDelete('set null');
             $table->date('start_date');
             $table->date('end_date');

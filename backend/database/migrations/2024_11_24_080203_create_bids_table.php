@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('bids', function (Blueprint $table) {
             $table->id('bid_id');
-            $table->foreignId('listing_id')->constrained('listings','listing_id')->onDelete('cascade');
+            $table->foreignId('vehicle_id')->constrained('vehicles','vehicle_id')->onDelete('cascade');
             $table->foreignId('bidder_id')->constrained('users','user_id')->onDelete('cascade');
             $table->decimal('bid_amount', 18, 2);
             $table->timestamp('bid_time')->useCurrent();

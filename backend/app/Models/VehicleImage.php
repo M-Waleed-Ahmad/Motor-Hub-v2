@@ -5,19 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ListingImage extends Model
+class VehicleImage extends Model
 {
     use HasFactory;
 
     protected $primaryKey = 'image_id';
 
     protected $fillable = [
-        'listing_id',
+        'vehicle_id',
         'image_url',
     ];
 
-    public function listing()
+    public function vehicle()
     {
-        return $this->belongsTo(Listing::class, 'listing_id');
+        return $this->belongsTo(Vehicle::class, 'listing_id');
     }
 }

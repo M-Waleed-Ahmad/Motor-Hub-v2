@@ -4,11 +4,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Listing extends Model
+class Vehicle extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'listing_id';
+    protected $primaryKey = 'vehicle_id';
 
     protected $fillable = [
         'user_id',
@@ -29,16 +29,16 @@ class Listing extends Model
 
     public function images()
     {
-        return $this->hasMany(ListingImage::class, 'listing_id');
+        return $this->hasMany(VehicleImage::class, 'vehicle_id');
     }
 
     public function bids()
     {
-        return $this->hasMany(Bid::class, 'listing_id');
+        return $this->hasMany(Bid::class, 'vehicle_id');
     }
 
     public function rentals()
     {
-        return $this->hasMany(Rental::class, 'listing_id');
+        return $this->hasMany(Rental::class, 'vehicle_id');
     }
 }

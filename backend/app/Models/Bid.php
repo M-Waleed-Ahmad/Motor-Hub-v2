@@ -12,15 +12,15 @@ class Bid extends Model
     protected $primaryKey = 'bid_id';
 
     protected $fillable = [
-        'listing_id',
+        'vehicle_id',
         'bidder_id',
         'bid_amount',
         'bid_status',
     ];
 
-    public function listing()
+    public function vehicle()
     {
-        return $this->belongsTo(Listing::class, 'listing_id');
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 
     public function bidder()

@@ -13,7 +13,7 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
-        'listing_id',
+        'vehicle_id',
         'payment_method',
         'amount',
         'payment_status',
@@ -24,8 +24,8 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function listing()
+    public function vehicle()
     {
-        return $this->belongsTo(Listing::class, 'listing_id');
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 }
