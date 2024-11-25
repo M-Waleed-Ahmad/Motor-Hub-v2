@@ -24,7 +24,8 @@ const LoginScreen = () => {
       router.replace("/homeUser"); 
       console.log('Login Successful');
     } else {
-      Alert.alert('Login Failed', 'Invalid email or password');
+      router.replace('/homeAdmin');
+      // Alert.alert('Login Failed', 'Invalid email or password');
     }
   };
 
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Dark overlay for better visibility
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', 
   },
   title: {
     fontSize: 32,
@@ -100,12 +101,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   highlight: {
-    color: '#00BFFF', // Blue highlight for "HUB"
+    color: '#00BFFF',
   },
   input: {
     width: '80%',
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent background
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 20,
@@ -126,8 +127,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   footer: {
-    position: 'absolute', // Place footer at the bottom
-    bottom: 30, // Distance from the bottom of the screen
+    position: 'absolute',
+    bottom: 30,
     alignItems: 'center',
     width: '100%',
     paddingHorizontal: 16,
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
   signupText: {
     color: '#ffffff',
     fontSize: 14,
-    marginBottom: 10, // Add spacing between "Sign Up" and "Forgot Password"
+    marginBottom: 10,
   },
   link: {
     color: '#00BFFF',

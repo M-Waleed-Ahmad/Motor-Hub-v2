@@ -16,7 +16,7 @@ export default function RootLayout() {
 
   // Load custom fonts
   const [fontsLoaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../../../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -31,14 +31,12 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
-        {/* Define routes */}
-        <Stack.Screen name="index" />
-        <Stack.Screen name="login" />       
-        <Stack.Screen name="signup" />       
-        <Stack.Screen name="forgotPassword" />       
-        <Stack.Screen name="homeUser/home" />       
-        <Stack.Screen name="homeAdmin/dashboard" />       
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="main">
+        <Stack.Screen name="main" />  
+        <Stack.Screen name="approveUser" />  
+        <Stack.Screen name="editUser" />  
+        <Stack.Screen name="addAdmin" />  
+        <Stack.Screen name="removeUser" />  
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
