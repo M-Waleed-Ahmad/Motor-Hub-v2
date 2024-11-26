@@ -9,6 +9,7 @@ import {
   Alert,
   ImageBackground,
 } from 'react-native';
+import axios from 'axios';
 
 const SignUpScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -18,7 +19,7 @@ const SignUpScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [contactNumber, setContactNumber] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword || !contactNumber) {
       Alert.alert('Sign Up Failed', 'All fields are required');
       return;
@@ -27,8 +28,45 @@ const SignUpScreen = () => {
       Alert.alert('Sign Up Failed', 'Passwords do not match');
       return;
     }
-    Alert.alert('Sign Up Successful', 'Welcome to Motor Hub!');
+  
+    try {
+      // Step 1: Fetch CSRF Token
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+  
+      // Step 2: Make POST request with CSRF token
+      const response = await axios.post(
+        'http://192.168.18.225:8000/register', // Assuming this is the register endpoint
+        {
+          full_name: `${firstName} ${lastName}`,
+          email,
+          password,
+          password_confirmation: confirmPassword,
+          contact_number: contactNumber,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+          },
+        }
+      );
+  
+      console.log('Sign Up Response:', response);
+  
+      if (response.status === 201) {
+        Alert.alert('Sign Up Successful', 'Welcome to Motor Hub!');
+      }
+    } catch (error) {
+      console.error('Sign Up Error:', error.response?.data || error.message);
+      Alert.alert(
+        'Sign Up Failed',
+        error.response?.data?.message || 'Something went wrong. Please try again.'
+      );
+    }
   };
+  
 
   return (
     <ImageBackground
