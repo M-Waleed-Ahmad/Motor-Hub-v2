@@ -18,8 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'first_name',
-        'last_name',
+        'full_name',
         'email',
         'password_hash',
         'phone_number',
@@ -28,9 +27,9 @@ class User extends Authenticatable
         'user_type',
     ];
 
-    public function listings()
+    public function vehicles()
     {
-        return $this->hasMany(Listing::class, 'user_id');
+        return $this->hasMany(Vehicle::class, 'user_id');
     }
 
     public function bids()

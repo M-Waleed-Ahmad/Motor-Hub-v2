@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bids', function (Blueprint $table) {
-            $table->id('bid_id');
+        Schema::create('vehicle_images', function (Blueprint $table) {
+            $table->id('image_id');
             $table->foreignId('vehicle_id')->constrained('vehicles','vehicle_id')->onDelete('cascade');
-            $table->foreignId('bidder_id')->constrained('users','user_id')->onDelete('cascade');
-            $table->decimal('bid_amount', 18, 2);
-            $table->timestamp('bid_time')->useCurrent();
-            $table->enum('bid_status', ['active', 'won', 'lost'])->default('active');
+            $table->string('image_url', 255);
             $table->timestamps();
         });
         
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bids');
+        Schema::dropIfExists('listing_images');
     }
 };
