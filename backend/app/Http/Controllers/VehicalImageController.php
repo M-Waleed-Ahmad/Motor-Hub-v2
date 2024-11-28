@@ -28,7 +28,34 @@ class VehicalImageController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validate the request
+        $request->validate([
+            'vehicle_id' => 'required|exists:vehicles,vehicle_id',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Handle the uploaded image
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filePath = $file->store('vehicle_images', 'public'); // Store in the "public/vehicle_images" directory
+
+            // Save the file path in the database
+            $vehicleImage = VehicleImage::create([
+                'vehicle_id' => $request->vehicle_id,
+                'image_url' => $filePath,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image uploaded successfully.',
+                'data' => $vehicleImage,
+            ], 201);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to upload image.',
+        ], 500);
     }
 
     /**

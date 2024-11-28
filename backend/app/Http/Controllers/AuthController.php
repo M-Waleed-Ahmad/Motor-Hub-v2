@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 
+use Illuminate\Support\Facades\Log; // Import the Log facade
+
 class AuthController extends Controller
 {
     public function register(Request $request)
@@ -67,7 +69,8 @@ class AuthController extends Controller
         // Optionally store the token in the database for later validation
         // $user->api_token = $token;
         // $user->save();
-    
+        
+        Log::info('User logged in successfully.', ['user_id' => $user]);
         // Return success response with the token
         return response()->json([
             'message' => 'Login successful.',

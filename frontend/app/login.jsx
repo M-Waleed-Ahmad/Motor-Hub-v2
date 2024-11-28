@@ -53,7 +53,8 @@ const LoginScreen = () => {
   
         // Step 3: Store the token in AsyncStorage
         await AsyncStorage.setItem('userToken', token);
-  
+        await AsyncStorage.setItem('user', JSON.stringify(user)); // Store user as a string
+
         // Step 4: Navigate based on user type
         if (user.user_type === 'admin') {
           router.replace('/homeAdmin');
