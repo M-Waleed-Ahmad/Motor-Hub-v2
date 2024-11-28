@@ -2,11 +2,6 @@ import React from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   Alert,
   ImageBackground,
 } from 'react-native';
@@ -24,13 +19,13 @@ export default function RemoveUsers() {
     try {
       // Step 1: Fetch CSRF Token
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
+      const csrfResponse = await axios.get('http://192.168.18225.136:8000/csrf-token');
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
   
       // Step 2: Make DELETE request with CSRF token
       const response = await axios.delete(
-        `http://192.168.18.193:8000/api/users/${userId}`, // Replace with the correct endpoint
+        `http://192.168.18.225:8000/api/users/${userId}`, // Replace with the correct endpoint
         {
           headers: {
             'Content-Type': 'application/json',

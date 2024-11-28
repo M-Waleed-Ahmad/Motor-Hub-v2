@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log; // Import the Log facade
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use Illuminate\Support\Facades\Storage;
 
 class VehicleController extends Controller
 {
@@ -56,6 +57,8 @@ class VehicleController extends Controller
                 'condition' => $request->condition ?? 5,
                 'availability_status' => $request->availability_status ?? 'available',
             ]);
+
+            
     
             Log::info('Vehicle created successfully.', ['vehicle_id' => $vehicle->vehicle_id]);
     
@@ -107,10 +110,41 @@ class VehicleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+
+     public function show($vehicle_id)
+     {
+         Log::info("Attempting to retrieve vehicle details", ['vehicle_id' => $vehicle_id]);
+     
+         // Find the vehicle with its associated images
+         $vehicle = Vehicle::with('images')->find($vehicle_id);
+     
+         if (!$vehicle) {
+             Log::warning("Vehicle not found", ['vehicle_id' => $vehicle_id]);
+             return response()->json(['error' => 'Vehicle not found'], 404);
+         }
+     
+         // Modify the image URLs to include the public storage path
+         $vehicle->images = $vehicle->images->map(function ($image) {
+             $image->image_url = asset('storage/vehicle_images/' . basename($image->image_url));
+             return $image;
+         });
+     
+         Log::info("Vehicle found and images processed", ['vehicle_id' => $vehicle->vehicle_id]);
+     
+         return response()->json([
+             'vehicle_id' => $vehicle->vehicle_id,
+             'name' => $vehicle->name,
+             'location' => $vehicle->location,
+             'registeredIn' => $vehicle->registeredIn,
+             'color' => $vehicle->color,
+             'vehicle_type' => $vehicle->vehicle_type,
+             'price' => $vehicle->price,
+             'created_at' => $vehicle->created_at,
+             'images' => $vehicle->images, // Array of image URLs
+         ]);
+     }
+     
+     
 
     /**
      * Show the form for editing the specified resource.

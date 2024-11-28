@@ -76,7 +76,7 @@ const CreateListing = () => {
       return;
     }
   
-    const listingData = new FormData();
+    const ListingData = new FormData();
     const userString= await AsyncStorage.getItem('user');
     let userId;
     if (userString) {
@@ -87,22 +87,22 @@ const CreateListing = () => {
       console.log("No user data found.");
     }
     // Append required fields
-    listingData.append('name', vehicleModel); // Match Laravel's field name
-    listingData.append('location', location || 'Unknown');
-    listingData.append('registeredIn', registeredIn || 'Unknown');
-    listingData.append('color', selectedColor || 'Unknown');
-    listingData.append('vehicle_type', selectedVehicleType);
-    listingData.append('bid', isAuction ? 'yes' : 'no');
-    listingData.append('listing_type', isForSale ? 'sale' : 'rent');
-    listingData.append('condition', 5); // Assuming a default value of 5
-    listingData.append('availability_status', 'available'); // Default status
-    listingData.append('price', isAuction ? null : price);
-    listingData.append('model', vehicleModel); // Assuming user ID is stored in AsyncStorage
-    listingData.append('user', userId); // Assuming user ID is stored in AsyncStorage
+    ListingData.append('name', vehicleModel); // Match Laravel's field name
+    ListingData.append('location', location || 'Unknown');
+    ListingData.append('registeredIn', registeredIn || 'Unknown');
+    ListingData.append('color', selectedColor || 'Unknown');
+    ListingData.append('vehicle_type', selectedVehicleType);
+    ListingData.append('bid', isAuction ? 'yes' : 'no');
+    ListingData.append('listing_type', isForSale ? 'sale' : 'rent');
+    ListingData.append('condition', 5); // Assuming a default value of 5
+    ListingData.append('availability_status', 'available'); // Default status
+    ListingData.append('price', isAuction ? null : price);
+    ListingData.append('model', vehicleModel); // Assuming user ID is stored in AsyncStorage
+    ListingData.append('user', userId); // Assuming user ID is stored in AsyncStorage
     // Attach the image
     const filename = image.split('/').pop();
     const fileType = filename.split('.').pop(); // e.g., jpg, png
-    listingData.append('image', {
+    ListingData.append('image', {
       uri: image,
       name: filename,
       type: `image/${fileType}`,
@@ -123,13 +123,15 @@ const CreateListing = () => {
           'Content-Type': 'multipart/form-data',
           'X-CSRF-TOKEN': csrfToken,
         },
-        body: listingData,
+        body: ListingData,
       });
   
       const result = await response.json();
       if (response.ok) {
         alert('Listing created successfully!');
-        router.push('/homeUser'); // Navigate back to the home screen
+        console.log('Listing created:', result.data.vehicle.vehicle_id);
+        const vehicle_id=result.data.vehicle.vehicle_id;
+        router.push(`/homeUser/listings/listingCreated/${vehicle_id}`); // Navigate back to the home screen
       } else {
         console.error('Error:', result);
         alert('Failed to create listing. Please try again.');
