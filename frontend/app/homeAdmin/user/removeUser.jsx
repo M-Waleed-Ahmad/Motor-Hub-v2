@@ -1,9 +1,61 @@
 import React from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ImageBackground,
+} from 'react-native';
+import axios from 'axios';
 
 export default function RemoveUsers() {
   const router = useRouter();
+
+  const handleRemoveUser = async (userId) => {
+    if (!userId) {
+      Alert.alert('Error', 'User ID is required to remove a user.');
+      return;
+    }
+  
+    try {
+      // Step 1: Fetch CSRF Token
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+      console.log('CSRF Token:', csrfToken);
+  
+      // Step 2: Make DELETE request with CSRF token
+      const response = await axios.delete(
+        `http://192.168.18.193:8000/api/users/${userId}`, // Replace with the correct endpoint
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+          },
+        }
+      );
+  
+      console.log('Remove User Response:', response);
+  
+      if (response.status === 200) {
+        Alert.alert('User Removed Successfully', `User with ID ${userId} has been removed.`);
+      } else {
+        Alert.alert('Error', 'Failed to remove the user. Please try again.');
+      }
+    } catch (error) {
+      console.error('Remove User Error:', error.response?.data || error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Something went wrong. Please try again.'
+      );
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
