@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\ApiMiddleware;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\PaymentController;
+
+
 
 Route::post('/register', [AuthController::class, 'register']);
 
@@ -14,8 +17,9 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('vehicle-register',[VehicleController::class,'create_vehicle']);
 Route::get('/vehicle/{vehicle_id}', [VehicleController::class, 'show']);
-
 Route::get('/vehicles', [VehicleController::class, 'index']);
+
+Route::post('/make-payment', [PaymentController::class, 'makePayment']);
 Route::get('/csrf-token', function () {
     return response()->json(['csrf_token' => csrf_token()]);
 });

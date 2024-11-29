@@ -38,11 +38,15 @@ const VehicleDetails = () => {
   };
 
   // Handle button click for Buy or Bid
-  const handleActionButton = () => {
-    if (vehicle.price) {
+  const handleActionButton = async () => {
+    if (vehicle.bid === 'no') {
+      await AsyncStorage.setItem('vehicle_id', id); // Store vehicle ID
+      await AsyncStorage.setItem('vehicle', JSON.stringify(vehicle)); // Store vehicle details
       router.push('/homeUser/listings/paymentOptions');
-    } else {
+    } else if (vehicle.bid === 'yes') {
       router.push({ pathname: '/homeUser/listings/carBid', params: { vehicleName: vehicle.name } });
+    } else {
+      router.push('/homeUser/listings/carListings');
     }
   };
 
@@ -112,12 +116,16 @@ const VehicleDetails = () => {
         <Text style={styles.info}>📞 {vehicle.owner.phone || 'Not provided'}</Text>
 
         {/* Buy or Bid Button */}
-        <TouchableOpacity
-          onPress={handleActionButton}
-          style={[styles.button, { backgroundColor: vehicle.price ? '#3498db' : '#2ecc71' }]}
-        >
-          <Text style={styles.buttonText}>{vehicle.price ? 'Buy' : 'Bid'}</Text>
-        </TouchableOpacity>
+        {vehicle.availability_status === 'sold' ? (
+          <Text style={styles.soldText}>Sold</Text>
+        ) : (
+          <TouchableOpacity
+            onPress={handleActionButton}
+            style={[styles.button, { backgroundColor: vehicle.price ? '#3498db' : '#2ecc71' }]}
+          >
+            <Text style={styles.buttonText}>{vehicle.bid === 'no' ? 'Buy' : 'Bid'}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -207,6 +215,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  soldText: {
+    marginTop: 20,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ff4444',
+    textAlign: 'center',
   },
 });
 

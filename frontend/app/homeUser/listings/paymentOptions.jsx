@@ -20,19 +20,19 @@ const PaymentOptions = () => {
       {/* Payment Options */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/homeUser/listings/paymentDetails/Cash')}
+        onPress={() => router.push('/homeUser/listings/paymentDetails/debit_card')}
       >
         <Text style={styles.buttonText}>Cash</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/homeUser/listings/paymentDetails/Card')}
+        onPress={() => router.push('/homeUser/listings/paymentDetails/credit_card')}
       >
         <Text style={styles.buttonText}>Credit Card</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/homeUser/listings/paymentDetails/Online')}
+        onPress={() => router.push('/homeUser/listings/paymentDetails/bank_transfer')}
       >
         <Text style={styles.buttonText}>Online</Text>
       </TouchableOpacity>
