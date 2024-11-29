@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter,Link } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('Buy a Vehicle');
@@ -20,6 +20,7 @@ export default function ProductListingsPage() {
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // Separate state for input field
   const [availabilityFilter, setAvailabilityFilter] = useState('all');
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
   const [modalVisible, setModalVisible] = useState(false); // Control modal visibility
@@ -69,7 +70,7 @@ export default function ProductListingsPage() {
       if (query.trim() !== '') {
         filtered = filtered.filter(
           (vehicle) =>
-            vehicle.type.toLowerCase().includes(query.toLowerCase()) ||
+            vehicle.vehicle_type.toLowerCase().includes(query.toLowerCase()) ||
             vehicle.model.toLowerCase().includes(query.toLowerCase())
         );
       }
@@ -91,6 +92,12 @@ export default function ProductListingsPage() {
     filterVehicles(vehicles, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery);
     setModalVisible(false); // Close the modal after applying filters
   }, [vehicles, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery, filterVehicles]);
+
+  // Handle Search Button Press
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchInput); // Update the searchQuery state
+    filterVehicles(vehicles, activeTab, availabilityFilter, vehicleTypeFilter, searchInput); // Apply filters
+  }, [searchInput, vehicles, activeTab, availabilityFilter, vehicleTypeFilter, filterVehicles]);
 
   // Fetch vehicles when the screen is focused
   useFocusEffect(
@@ -128,14 +135,14 @@ export default function ProductListingsPage() {
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <TextInput
+      <TextInput
           style={styles.searchInput}
           placeholder="Search for a vehicle..."
           placeholderTextColor="#888"
-          value={searchQuery}
-          onChangeText={(query) => setSearchQuery(query)}
+          value={searchInput} // Bind input state
+          onChangeText={(text) => setSearchInput(text)} // Update input state
         />
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleSearch}> 
           <FontAwesome name="search" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -156,6 +163,18 @@ export default function ProductListingsPage() {
             <Image source={{ uri: item.images?.[0]?.image_url || 'https://via.placeholder.com/150' }} style={styles.productImage} />
             <View style={styles.productInfo}>
               <Text style={styles.productName}>{item.name || 'Unnamed Vehicle'}</Text>
+              <View style={styles.rating}>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <FontAwesome
+                    key={i}
+                    name="star"
+                    size={16} // Slightly larger for better visibility
+                    color={i < item.condition ? '#FFD700' : '#555'} // Gold for active stars, grey for inactive
+                    style={styles.star}
+                  />
+                ))}
+              </View>
+         
               <Text style={styles.productPrice}>Price: {item.price || 'N/A'}</Text>
             </View>
           </TouchableOpacity>
@@ -289,4 +308,8 @@ const styles = StyleSheet.create({
   selectedOption: { color: '#00b4d8', fontSize: 14 },
   applyButton: { backgroundColor: '#00b4d8', padding: 10, borderRadius: 5, marginTop: 20 },
   applyButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+  rating: {
+    flexDirection: 'row',
+    marginVertical: 5,
+  },
 });
