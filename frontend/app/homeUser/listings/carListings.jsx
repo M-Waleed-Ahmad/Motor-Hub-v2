@@ -1,25 +1,112 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  Modal,
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // Import useRouter to navigate
-import { Link } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter,Link } from 'expo-router';
 
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('Buy a Vehicle');
-  const router = useRouter(); // Initialize the router
+  const [vehicles, setVehicles] = useState([]);
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [availabilityFilter, setAvailabilityFilter] = useState('all');
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all');
+  const [modalVisible, setModalVisible] = useState(false); // Control modal visibility
+  const router = useRouter();
 
-  const products = [
-    { id: 1, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    { id: 2, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    { id: 3, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    { id: 4, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    // Add more products as needed
-  ];
+  // Fetch vehicles
+  const fetchVehicles = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://192.168.18.225:8000/vehicles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vehicles');
+      }
+      const data = await response.json();
+      setVehicles(data);
+      filterVehicles(data, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, availabilityFilter, vehicleTypeFilter, searchQuery]);
 
-  // Function to handle navigation to car details page
-  const navigateToDetails = (carId) => {
-    router.push(`/homeUser/listings/carDetails?id=${carId}`); // Navigate to car details page, passing the car ID as query param
-  };
+  // Filter vehicles based on various criteria
+  const filterVehicles = useCallback(
+    (vehicles, tab, availability, type, query) => {
+      let filtered = vehicles;
+
+      // Filter by listing type
+      if (tab === 'Buy a Vehicle') {
+        filtered = filtered.filter((vehicle) => vehicle.listing_type === 'sale');
+      } else if (tab === 'Rent a Vehicle') {
+        filtered = filtered.filter((vehicle) => vehicle.listing_type === 'rent');
+      }
+
+      // Filter by availability
+      if (availability !== 'all') {
+        filtered = filtered.filter((vehicle) => vehicle.availability_status === availability);
+      }
+
+      // Filter by vehicle type
+      if (type !== 'all') {
+        filtered = filtered.filter((vehicle) => vehicle.vehicle_type === type);
+      }
+
+      // Search by type and model
+      if (query.trim() !== '') {
+        filtered = filtered.filter(
+          (vehicle) =>
+            vehicle.type.toLowerCase().includes(query.toLowerCase()) ||
+            vehicle.model.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+
+      setFilteredVehicles(filtered);
+    },
+    []
+  );
+
+  const handleTabChange = useCallback(
+    (tab) => {
+      setActiveTab(tab);
+      filterVehicles(vehicles, tab, availabilityFilter, vehicleTypeFilter, searchQuery);
+    },
+    [vehicles, availabilityFilter, vehicleTypeFilter, searchQuery, filterVehicles]
+  );
+
+  const handleApplyFilters = useCallback(() => {
+    filterVehicles(vehicles, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery);
+    setModalVisible(false); // Close the modal after applying filters
+  }, [vehicles, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery, filterVehicles]);
+
+  // Fetch vehicles when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchVehicles();
+    }, [fetchVehicles])
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00BFFF" />
+        <Text style={styles.loadingText}>Loading vehicles...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -27,13 +114,13 @@ export default function ProductListingsPage() {
       <View style={styles.tabs}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'Buy a Vehicle' && styles.activeTab]}
-          onPress={() => setActiveTab('Buy a Vehicle')}
+          onPress={() => handleTabChange('Buy a Vehicle')}
         >
           <Text style={[styles.tabText, activeTab === 'Buy a Vehicle' && styles.activeTabText]}>Buy a Vehicle</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'Rent a Vehicle' && styles.activeTab]}
-          onPress={() => setActiveTab('Rent a Vehicle')}
+          onPress={() => handleTabChange('Rent a Vehicle')}
         >
           <Text style={[styles.tabText, activeTab === 'Rent a Vehicle' && styles.activeTabText]}>Rent a Vehicle</Text>
         </TouchableOpacity>
@@ -41,151 +128,165 @@ export default function ProductListingsPage() {
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <TextInput style={styles.searchInput} placeholder="Hinted search text" placeholderTextColor="#888" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search for a vehicle..."
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={(query) => setSearchQuery(query)}
+        />
         <TouchableOpacity>
           <FontAwesome name="search" size={20} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          {/* Open Filter Modal */}
           <FontAwesome name="filter" size={20} color="#fff" style={styles.filterIcon} />
         </TouchableOpacity>
       </View>
 
       {/* Product List */}
       <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
+        data={filteredVehicles}
+        keyExtractor={(item) => item.vehicle_id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.productCard}
-            onPress={() => {navigateToDetails(item.id)}}
+            onPress={() => router.push(`/homeUser/listings/carDetails/${item.vehicle_id}`)}
           >
-            <Image source={{ uri: item.image }} style={styles.productImage} />
+            <Image source={{ uri: item.images?.[0]?.image_url || 'https://via.placeholder.com/150' }} style={styles.productImage} />
             <View style={styles.productInfo}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <View style={styles.rating}>
-                {[...Array(5)].map((_, i) => (
-                  <FontAwesome key={i} name="star" size={14} color="#00b4d8" />
-                ))}
-              </View>
-              <Text style={styles.productPrice}>Price: {item.price}</Text>
+              <Text style={styles.productName}>{item.name || 'Unnamed Vehicle'}</Text>
+              <Text style={styles.productPrice}>Price: {item.price || 'N/A'}</Text>
             </View>
           </TouchableOpacity>
         )}
-        style={styles.productList}  
+        style={styles.productList}
       />
-
-
-      {/* Bottom Navigation */}
+      
       <View style={styles.bottomNav}>
         <TouchableOpacity>
           <Link href="/homeUser/profile">
-            <FontAwesome name="user" size={30} color="white" />
+          <FontAwesome name="user" size={30} color="white" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/listings/carListings">
-            <FontAwesome name="car" size={30} color="#00b4d8" />
+          <FontAwesome name="car" size={30} color="white" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/home">
-            <FontAwesome name="home" size={30} color="white" />
+          <FontAwesome name="home" size={30} color="#00b4d8" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/notifications">
-            <FontAwesome name="bell" size={30} color="white" />
+          <FontAwesome name="bell" size={30} color="white" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity >
           <Link href="homeUser/settings" style={styles.forgotText}>
-            <FontAwesome name="cog" size={30} color="white" />
+          <FontAwesome name="cog" size={30} color="white" />
           </Link>
         </TouchableOpacity>
       </View>
+
+      {/* Filter Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Apply Filters</Text>
+
+            {/* Availability Filter */}
+            <Text style={styles.filterLabel}>Availability</Text>
+            <TouchableOpacity onPress={() => setAvailabilityFilter('available')} style={styles.filterOption}>
+              <Text style={availabilityFilter === 'available' ? styles.selectedOption : styles.optionText}>
+                Available
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setAvailabilityFilter('sold')} style={styles.filterOption}>
+              <Text style={availabilityFilter === 'sold' ? styles.selectedOption : styles.optionText}>
+                Sold
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setAvailabilityFilter('rented')} style={styles.filterOption}>
+              <Text style={availabilityFilter === 'rented' ? styles.selectedOption : styles.optionText}>
+                Rented
+              </Text>
+            </TouchableOpacity>
+
+            {/* Vehicle Type Filter */}
+               {/* Vehicle Type Filter */}
+               <Text style={styles.filterLabel}>Vehicle Type</Text>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('sedans')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'sedans' ? styles.selectedOption : styles.optionText}>sedans</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('suvs')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'suvs' ? styles.selectedOption : styles.optionText}>SUVS</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('trucks')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'trucks' ? styles.selectedOption : styles.optionText}>Truck</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('bikes')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'bikes' ? styles.selectedOption : styles.optionText}>Bikes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('e-cars')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'e-cars' ? styles.selectedOption : styles.optionText}>E-Cars</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('sports')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'sports' ? styles.selectedOption : styles.optionText}>Sports</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('new')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'new' ? styles.selectedOption : styles.optionText}>New</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setVehicleTypeFilter('used')} style={styles.filterOption}>
+              <Text style={vehicleTypeFilter === 'used' ? styles.selectedOption : styles.optionText}>Used</Text>
+            </TouchableOpacity>
+
+
+
+            {/* Apply Filters Button */}
+            <TouchableOpacity onPress={handleApplyFilters} style={styles.applyButton}>
+              <Text style={styles.applyButtonText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  tabs: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#1E1E1E',
-    paddingVertical: 10,
-  },
-  tab: {
-    padding: 10,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#00b4d8',
-  },
-  tabText: {
-    color: '#888',
-    fontSize: 16,
-  },
-  activeTabText: {
-    color: '#fff',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    margin: 10,
-    paddingHorizontal: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 16,
-  },
-  filterIcon: {
-    marginLeft: 10,
-  },
-  productList: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  productCard: {
-    flexDirection: 'row',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    marginVertical: 5,
-    padding: 10,
-  },
-  productImage: {
-    width: 100,
-    height: 70,
-    borderRadius: 10,
-  },
-  productInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  productName: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  rating: {
-    flexDirection: 'row',
-    marginVertical: 5,
-  },
-  productPrice: {
-    color: '#aaa',
-    fontSize: 14,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#121212',
-    paddingVertical: 10,
-  },
+  container: { flex: 1, backgroundColor: '#121212' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' },
+  loadingText: { color: '#fff', marginTop: 10 },
+  tabs: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#1E1E1E', paddingVertical: 10 },
+  tab: { padding: 10 },
+  activeTab: { borderBottomWidth: 2, borderBottomColor: '#00b4d8' },
+  tabText: { color: '#888', fontSize: 16 },
+  activeTabText: { color: '#fff' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', borderRadius: 10, margin: 10, paddingHorizontal: 10 },
+  searchInput: { flex: 1, color: '#fff', fontSize: 16 },
+  filterIcon: { marginLeft: 10 },
+  productList: { flex: 1, paddingHorizontal: 10 },
+  productCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 10, marginVertical: 5, padding: 10 },
+  productImage: { width: 100, height: 70, borderRadius: 10 },
+  productInfo: { flex: 1, marginLeft: 10 },
+  productName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  productPrice: { color: '#aaa', fontSize: 14 },
+  bottomNav: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: '#121212', paddingVertical: 10 },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
+  modalContent: { backgroundColor: '#1E1E1E', padding: 20, borderRadius: 10, width: '80%' },
+  modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  filterLabel: { color: '#aaa', fontSize: 14, marginTop: 10 },
+  filterOption: { marginVertical: 5, padding: 10, borderRadius: 5, backgroundColor: '#333' },
+  optionText: { color: '#aaa', fontSize: 14 },
+  selectedOption: { color: '#00b4d8', fontSize: 14 },
+  applyButton: { backgroundColor: '#00b4d8', padding: 10, borderRadius: 5, marginTop: 20 },
+  applyButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
 });

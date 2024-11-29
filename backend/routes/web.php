@@ -15,6 +15,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('vehicle-register',[VehicleController::class,'create_vehicle']);
 Route::get('/vehicle/{vehicle_id}', [VehicleController::class, 'show']);
 
+Route::get('/vehicles', [VehicleController::class, 'index']);
 Route::get('/csrf-token', function () {
     return response()->json(['csrf_token' => csrf_token()]);
 });

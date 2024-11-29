@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log; // Import the Log facade
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 class VehicleController extends Controller
@@ -17,8 +18,38 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        //
+        Log::info("Attempting to retrieve all vehicles");
+    
+        // Fetch all vehicles with their associated images
+        $vehicles = Vehicle::with('images')->get();
+    
+        if ($vehicles->isEmpty()) {
+            Log::warning("No vehicles found in the database");
+            return response()->json(['message' => 'No vehicles available'], 404);
+        }
+    
+        // Process each vehicle to include the correct public storage path for images
+        $vehicles = $vehicles->map(function ($vehicle) {
+            $user = User::where('user_id', $vehicle->user_id)->first();
+            $owner = [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'location' => $user->location
+            ];
+            $vehicle->owner = $owner;
+            $vehicle->images = $vehicle->images->map(function ($image) {
+                $image->image_url = asset('storage/vehicle_images/' . basename($image->image_url));
+                return $image;
+            });
+            return $vehicle;
+        });
+    
+        Log::info("All vehicles retrieved successfully");
+    
+        return response()->json($vehicles);
     }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -122,6 +153,13 @@ class VehicleController extends Controller
              Log::warning("Vehicle not found", ['vehicle_id' => $vehicle_id]);
              return response()->json(['error' => 'Vehicle not found'], 404);
          }
+         $user = User::where('user_id', $vehicle->user_id)->first();
+         $owner = [
+             'name' => $user->full_name,
+             'email' => $user->email,
+             'phone' => $user->contact_number,
+         ];
+         $vehicle->owner = $owner;
      
          // Modify the image URLs to include the public storage path
          $vehicle->images = $vehicle->images->map(function ($image) {
@@ -138,8 +176,14 @@ class VehicleController extends Controller
              'registeredIn' => $vehicle->registeredIn,
              'color' => $vehicle->color,
              'vehicle_type' => $vehicle->vehicle_type,
+             'condition' => $vehicle->condition,
+             'availability_status' => $vehicle->availability_status,
+             'listing_type' => $vehicle->listing_type,
+             'model' => $vehicle->model,
+             'bid' => $vehicle->bid,
              'price' => $vehicle->price,
              'created_at' => $vehicle->created_at,
+             'owner' => $vehicle->owner, // Array of owner details
              'images' => $vehicle->images, // Array of image URLs
          ]);
      }
