@@ -190,12 +190,12 @@ export default function ProductListingsPage() {
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/listings/carListings">
-          <FontAwesome name="car" size={30} color="white" />
+          <FontAwesome name="car" size={30} color="#00b4d8" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>
           <Link href="/homeUser/home">
-          <FontAwesome name="home" size={30} color="#00b4d8" />
+          <FontAwesome name="home" size={30} color="white" />
           </Link>
         </TouchableOpacity>
         <TouchableOpacity>

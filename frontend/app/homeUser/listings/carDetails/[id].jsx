@@ -4,12 +4,14 @@ import { useRouter, useLocalSearchParams } from 'expo-router'; // to handle navi
 import Icon from 'react-native-vector-icons/Ionicons';
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import axios from 'axios';
 const VehicleDetails = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // Get vehicle ID from query params
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false); // State to track if the vehicle is in favorites
+
 
   // Fetch vehicle details based on ID
   useEffect(() => {
@@ -29,7 +31,12 @@ const VehicleDetails = () => {
       }
     };
 
-    if (id) fetchVehicleDetails(); // Only fetch if ID is provided
+    if (id) 
+      {
+        fetchVehicleDetails();
+        checkFavoriteStatus();
+
+      }; // Only fetch if ID is provided
   }, [id]);
 
   // Function to navigate back
@@ -49,6 +56,80 @@ const VehicleDetails = () => {
       router.push('/homeUser/listings/carListings');
     }
   };
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user'); // Get the logged-in user's ID
+      const user = JSON.parse(userString);
+      const userId = user.user_id;
+      const response = await fetch(`http://192.168.18.225:8000/favourites?user_id=${userId}&vehicle_id=${id}`);
+      const data = await response.json();
+      console.log('Fetched favorite status:', data);
+      setIsFavorite(data.is_favorite);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  };
+
+
+  const toggleFavorite = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user'); 
+      const user = JSON.parse(userString);
+      const userId = user.user_id;
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+      console.log('CSRF Token:', csrfToken);
+      if (isFavorite) {
+        // Remove from favorites
+        await axios.delete(`http://192.168.18.225:8000/favourites`, {
+          params: {
+            user_id: userId,
+            vehicle_id: id,
+          },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        
+        setIsFavorite(false);
+      } else {
+        // Add to favorites
+        await axios.post(
+          `http://192.168.18.225:8000/favourites`,
+          {
+            user_id: userId,
+            vehicle_id: id,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          }
+        );
+        
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite status:', error);
+    }
+  };
+
+  // Show loading indicator while fetching data
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00BFFF" />
+        <Text style={styles.loadingText}>Loading vehicle details...</Text>
+      </View>
+    );
+  }
+  
 
   // Show loading indicator while fetching data
   if (loading) {
@@ -115,6 +196,10 @@ const VehicleDetails = () => {
         <Text style={styles.info}>👤 {vehicle.owner.name || 'Unknown'}</Text>
         <Text style={styles.info}>📞 {vehicle.owner.phone || 'Not provided'}</Text>
 
+        {/* Add to Favorites Button */}
+        <TouchableOpacity onPress={toggleFavorite} style={styles.favButton}>
+          <Text style={styles.favButtonText}>{isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</Text>
+        </TouchableOpacity>
         {/* Buy or Bid Button */}
         {vehicle.availability_status === 'sold' ? (
           <Text style={styles.soldText}>Sold</Text>
@@ -222,6 +307,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ff4444',
     textAlign: 'center',
+  },
+  favButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#FF4081',
+    alignItems: 'center',
+  },
+  favButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
