@@ -241,6 +241,101 @@ class VehicleController extends Controller
      }
      
 
+
+    public function getRentals(Request $request)
+    {
+        try {
+            $userId = $request->query('user_id'); // Get user ID from query params
+            Log::info('Fetching rental vehicles for user', ['user_id' => $userId]);
+
+            // Fetch vehicles owned by the user with listing_type='rent'
+            $ownedVehicles = Vehicle::with('images')
+                ->where('user_id', $userId)
+                ->where('listing_type', 'rent')
+                ->get();
+            Log::info('Owned rental vehicles fetched', ['count' => $ownedVehicles->count()]);
+
+            // Fetch vehicles bought by the user with listing_type='rent'
+            $boughtVehicles = Vehicle::with('images')
+                ->whereHas('bids', function ($query) use ($userId) {
+                    $query->where('bidder_id', $userId)
+                          ->where('bid_status', 'won'); // Assuming 'won' status indicates a successful purchase
+                })
+                ->where('listing_type', 'rent')
+                ->get();
+            Log::info('Bought rental vehicles fetched', ['count' => $boughtVehicles->count()]);
+
+            // Merge the collections
+            $vehicles = $ownedVehicles->merge($boughtVehicles);
+            Log::info('Merged rental vehicles', ['total_count' => $vehicles->count()]);
+
+            // Process each vehicle to include the correct public storage path for images
+            $vehicles = $vehicles->map(function ($vehicle) {
+                $vehicle->images = $vehicle->images->map(function ($image) {
+                    $image->image_url = asset('storage/vehicle_images/' . basename($image->image_url));
+                    return $image;
+                });
+                return $vehicle;
+            });
+            Log::info('Processed rental vehicles images');
+
+            return response()->json($vehicles, 200);
+        } catch (\Exception $e) {
+            Log::error('Error fetching rental vehicles', [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['error' => 'Error fetching rental vehicles', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getSales(Request $request)
+    {
+        try {
+            $userId = $request->query('user_id'); // Get user ID from query params
+            Log::info('Fetching sale vehicles for user', ['user_id' => $userId]);
+
+            // Fetch vehicles owned by the user with listing_type='sale'
+            $ownedVehicles = Vehicle::with('images')
+                ->where('user_id', $userId)
+                ->where('listing_type', 'sale')
+                ->get();
+            Log::info('Owned sale vehicles fetched', ['count' => $ownedVehicles->count()]);
+
+            // Fetch vehicles bought by the user with listing_type='sale'
+            $boughtVehicles = Vehicle::with('images')
+                ->whereHas('bids', function ($query) use ($userId) {
+                    $query->where('bidder_id', $userId)
+                          ->where('bid_status', 'won'); // Assuming 'won' status indicates a successful purchase
+                })
+                ->where('listing_type', 'sale')
+                ->get();
+            Log::info('Bought sale vehicles fetched', ['count' => $boughtVehicles->count()]);
+
+            // Merge the collections
+            $vehicles = $ownedVehicles->merge($boughtVehicles);
+            Log::info('Merged sale vehicles', ['total_count' => $vehicles->count()]);
+
+            // Process each vehicle to include the correct public storage path for images
+            $vehicles = $vehicles->map(function ($vehicle) {
+                $vehicle->images = $vehicle->images->map(function ($image) {
+                    $image->image_url = asset('storage/vehicle_images/' . basename($image->image_url));
+                    return $image;
+                });
+                return $vehicle;
+            });
+            Log::info('Processed sale vehicles images');
+
+            return response()->json($vehicles, 200);
+        } catch (\Exception $e) {
+            Log::error('Error fetching sale vehicles', [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['error' => 'Error fetching sale vehicles', 'details' => $e->getMessage()], 500);
+        }
+    }
     /**
      * Show the form for editing the specified resource.
      */

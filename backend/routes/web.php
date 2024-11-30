@@ -19,6 +19,9 @@ Route::post('/updateProfile', [UserController::class, 'updateProfile']);
 Route::post('/updateProfileImage', [UserController::class, 'updateProfileImage']);
 Route::post('/user-update', [UserController::class, 'update']);
 
+Route::get('/rentals', [VehicleController::class, 'getRentals']);
+Route::get('/sales', [VehicleController::class, 'getRentals']);
+
 // Vehicle Routes
 Route::post('/vehicle-register', [VehicleController::class, 'create_vehicle']);
 Route::get('/vehicles', [VehicleController::class, 'index']);
