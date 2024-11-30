@@ -11,6 +11,11 @@ use App\Http\Controllers\BidController;
 
 
 
+Route::post('/updateProfile', [UserController::class, 'updateProfile']);
+Route::post('/updateProfileImage', [UserController::class, 'updateProfileImage']);
+
+
+
 
 
 
