@@ -53,6 +53,9 @@ Route::get('/admin/users', [AdminController::class, 'index']);
 Route::delete('/admin/users/{id}', [AdminController::class, 'removeUserOrAdmin']);
 Route::post('/admin/users/approve/{id}', [AdminController::class, 'approveUser']);
 Route::put('/admin/users/{id}', [UserController::class, 'update']); // Update user
+Route::post('/updateAdminProfile', [UserController::class, 'updateProfile']);
+Route::post('/updateAdminProfileImage', [UserController::class, 'updateProfileImage']);
+Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
 // Miscellaneous Routes
 Route::get('/csrf-token', function () {

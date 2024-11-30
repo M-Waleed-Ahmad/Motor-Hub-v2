@@ -52,16 +52,17 @@ export default function UserManagementPage() {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => router.push('/homeAdmin/user')}>
+        <TouchableOpacity onPress={() => router.push('/homeAdmin/user/profile')}>
           <FontAwesome name="user" size={25} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/homeAdmin/editUsers')}>
-          <FontAwesome name="edit" size={25} color="white" />
+        <TouchableOpacity onPress={() => router.push('/homeAdmin/user/main')}>
+          <FontAwesome name="edit" size={25} color="#00b4d8" />
         </TouchableOpacity>
+      
         <TouchableOpacity onPress={() => router.push('/homeAdmin/dashboard')}>
-          <FontAwesome name="home" size={25} color="#00b4d8" />
+          <FontAwesome name="home" size={25} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/homeAdmin/items')}>
+        <TouchableOpacity onPress={() => router.push('/homeAdmin/carListings')}>
           <FontAwesome name="bar-chart" size={25} color="white" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/homeAdmin/settings')}>

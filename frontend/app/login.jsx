@@ -50,6 +50,10 @@ const LoginScreen = () => {
   
         // Step 3: Store the token in AsyncStorage
         await AsyncStorage.setItem('userToken', token);
+        if (user.user_type === 'admin') {
+          await AsyncStorage.setItem('admin', JSON.stringify(user)); // Store user as a string
+        }
+        else
         await AsyncStorage.setItem('user', JSON.stringify(user)); // Store user as a string
         console.log('Login successful:', user);
         // Step 4: Navigate based on user type

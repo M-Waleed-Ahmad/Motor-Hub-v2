@@ -35,7 +35,9 @@ export default function RootLayout() {
         {/* Define routes */}
         <Stack.Screen name="dashboard" />    
         <Stack.Screen name="user/main" />    
+        <Stack.Screen name="user/profile" />    
         <Stack.Screen name="carListings" />    
+        <Stack.Screen name="settings" />    
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>

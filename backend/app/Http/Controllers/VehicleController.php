@@ -246,7 +246,7 @@ class VehicleController extends Controller
      }
      
 
-
+    
     public function getRentals(Request $request)
     {
         try {
@@ -295,6 +295,7 @@ class VehicleController extends Controller
     }
 
 
+
     public function getSales(Request $request)
     {
         try {
@@ -341,6 +342,9 @@ class VehicleController extends Controller
             return response()->json(['error' => 'Error fetching sale vehicles', 'details' => $e->getMessage()], 500);
         }
     }
+
+
+   
     /**
      * Show the form for editing the specified resource.
      */
@@ -360,8 +364,39 @@ class VehicleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($vehicle_id)
     {
-        //
+        try {
+            Log::info("Attempting to delete vehicle", ['vehicle_id' => $vehicle_id]);
+
+            // Find the vehicle
+            $vehicle = Vehicle::find($vehicle_id);
+
+            if (!$vehicle) {
+                Log::warning("Vehicle not found", ['vehicle_id' => $vehicle_id]);
+                return response()->json(['error' => 'Vehicle not found'], 404);
+            }
+
+            // Delete associated images from storage and database
+            $vehicle->images->each(function ($image) {
+                Storage::disk('public')->delete($image->image_url);
+                $image->delete();
+            });
+
+            // Delete the vehicle
+            $vehicle->delete();
+
+            Log::info("Vehicle and associated images deleted successfully", ['vehicle_id' => $vehicle_id]);
+
+            return response()->json(['message' => 'Vehicle deleted successfully'], 200);
+        } catch (\Exception $e) {
+            Log::error('Error deleting vehicle', [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Error deleting vehicle', 'details' => $e->getMessage()], 500);
+        }
     }
+    
 }
