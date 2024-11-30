@@ -1,41 +1,94 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { Link } from 'expo-router';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
+import { Link } from 'expo-router';
 
 export default function ProfilePage() {
   const router = useRouter();
 
-  // State for user information
-  const [userInfo, setUserInfo] = useState({
-    name: 'Suneel Munj Lite',
-    phone: 'XXXX-XXXXXXX',
-    email: 'abc@gmail.com',
-    cnic: 'XXXXX-XXXXXXX-X',
-  });
-
-  // State for profile image
-  const [profileImage, setProfileImage] = useState(null);
-
-  // State to track editing mode
+  const [userInfo, setUserInfo] = useState(null);
+  const [profile_image, setprofile_image] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Function to start editing a field
-  const startEditing = (field, value) => {
-    setEditingField(field);
-    setTempValue(value);
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+      if (userString) {
+        const user = JSON.parse(userString);
+        console.log('User info:', user);
+        setUserInfo(user);
+        setprofile_image(user.profile_image || null);
+      } else {
+        Alert.alert('Error', 'User not found. Please log in again.');
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      Alert.alert('Error', 'Unable to load user information.');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  const saveChanges = async () => {
+    if (!tempValue.trim()) {
+      Alert.alert('Error', 'Value cannot be empty.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Step 1: Fetch CSRF Token
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+      console.log('CSRF Token:', csrfToken);
+  
+    const response = await axios.post('http://192.168.18.225:8000/updateProfile', {
+      user_id: userInfo.user_id,
+      [editingField]: tempValue,
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+
+      if (response.data.success) {
+        Alert.alert('Success', `${editingField} updated successfully.`);
+        const updatedUser = { ...userInfo, [editingField]: tempValue };
+        setUserInfo(updatedUser);
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        setEditingField(null);
+      } else {
+        Alert.alert('Error', 'Failed to update profile. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Unable to update profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Function to save changes
-  const saveChanges = () => {
-    setUserInfo((prev) => ({ ...prev, [editingField]: tempValue }));
-    setEditingField(null);
-  };
-
-  // Function to pick an image
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -45,19 +98,73 @@ export default function ProfilePage() {
     });
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
+      const imageUri = result.assets[0].uri;
+      setprofile_image(imageUri);
+
+      const formData = new FormData();
+      formData.append('user_id', userInfo.user_id);
+      formData.append('profile_image', {
+        uri: imageUri,
+        name: `profile_${userInfo.user_id}.jpg`,
+        type: 'image/jpeg',
+      });
+
+      try {
+        setLoading(true);
+        // Step 1: Fetch CSRF Token
+        console.log('Fetching CSRF Token...');
+        const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+        const csrfToken = csrfResponse.data.csrf_token;
+        console.log('CSRF Token:', csrfToken);
+  
+        const response = await axios.post('http://192.168.18.225:8000/updateProfileImage', formData, {
+          headers: { 'Content-Type': 'multipart/form-data',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+           },
+        });
+
+        if (response.data.success) {
+          Alert.alert('Success', 'Profile image updated successfully.');
+          const updatedUser = { ...userInfo, profile_image: imageUri };
+          setUserInfo(updatedUser);
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        } else {
+          Alert.alert('Error', 'Failed to update profile image.');
+        }
+      } catch (error) {
+        console.error('Error updating profile image:', error);
+        Alert.alert('Error', 'Unable to update profile image. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserInfo();
+    }, [fetchUserInfo])
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00BFFF" />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  const editableFields = ['full_name', 'phone_number', 'email', 'address'];
+
   return (
     <View style={styles.container}>
-      {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header */}
         <View style={styles.profileHeader}>
           <TouchableOpacity onPress={pickImage}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            {profile_image ? (
+              <Image source={{ uri: profile_image }} style={styles.profile_image} />
             ) : (
               <FontAwesome name="user-circle" size={80} color="#fff" />
             )}
@@ -65,56 +172,68 @@ export default function ProfilePage() {
           <Text style={styles.username}>Profile</Text>
         </View>
 
-        {/* User Info Section */}
         <View style={styles.infoCard}>
-          {Object.keys(userInfo).map((field) => (
-            <View key={field} style={styles.infoRow}>
-              <FontAwesome
-                name={field === 'name' ? 'user' : field === 'phone' ? 'phone' : field === 'email' ? 'envelope' : 'id-card'}
-                size={20}
-                color="#fff"
-              />
-              <Text style={styles.infoText}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
-              {editingField === field ? (
-                <TextInput
-                  style={styles.editInput}
-                  value={tempValue}
-                  onChangeText={setTempValue}
-                  autoFocus
-                  onBlur={saveChanges}
-                />
-              ) : (
-                <Text style={styles.infoValue}>{userInfo[field]}</Text>
-              )}
-              <TouchableOpacity onPress={() => startEditing(field, userInfo[field])}>
-                <FontAwesome name="pencil" size={16} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+      {userInfo &&
+        editableFields.map((field) => (
+          <View key={field} style={styles.infoRow}>
+            <FontAwesome
+              name={
+                field === 'full_name'
+                  ? 'user'
+                  : field === 'phone_number'
+                  ? 'phone'
+                  : field === 'email'
+                  ? 'envelope'
+                  : field === 'cnic'
+                  ? 'id-card'
+                  : 'home'
+              }
+              size={20}
+              color="#fff"
+            />
+        {/* Use a mapping to display user-friendly labels */}
+        <Text style={styles.infoText}>
+          {field === 'phone_number'
+            ? 'Phone'
+            : field === 'full_name'
+            ? 'Full Name'
+            : field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ')}
+        </Text>
+        {editingField === field ? (
+          <TextInput
+            style={styles.editInput}
+            value={tempValue}
+            onChangeText={setTempValue}
+            autoFocus
+            onBlur={saveChanges}
+          />
+        ) : (
+          <Text style={styles.infoValue}>{userInfo[field]}</Text>
+        )}
+        <TouchableOpacity onPress={() => setEditingField(field)}>
+          <FontAwesome name="pencil" size={16} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    ))}
+</View>
 
-        {/* Navigation Buttons */}
+
         <View style={styles.buttonGrid}>
-          <View>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myRentals')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Rentals</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myFavs')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Favourites</Text>
-            </TouchableOpacity>
-          </View>
-          <View>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myListings')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Listings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myBids')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Bids</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myRentals')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Rentals</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myFavs')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Favourites</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myListings')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Listings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myBids')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Bids</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity>
           <Link href="/homeUser/profile">
@@ -161,10 +280,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  profile_image: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: '#00b4d8',
   },
   username: {
     color: '#fff',
@@ -206,16 +327,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    width: '50%',
+    width: '100%',
   },
   navButton: {
     backgroundColor: '#1E1E1E',
     borderRadius: 10,
-    paddingVertical: 40,
+    paddingVertical: 20,
     alignItems: 'center',
     marginHorizontal: 5,
     marginBottom: 25,
-    width: '100%',
+    width: '45%',
   },
   buttonText: {
     color: '#fff',
@@ -230,5 +351,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     width: '100%',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
   },
 });

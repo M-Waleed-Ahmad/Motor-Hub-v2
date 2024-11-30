@@ -33,7 +33,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }} initialRouteName="carListings">
         <Stack.Screen name="carListings" />      
-        <Stack.Screen name="carDetails" />      
+        {/* <Stack.Screen name="carDetails" />       */}
         <Stack.Screen name="carBid" />      
         <Stack.Screen name="paymentOptions" />      
         {/* <Stack.Screen name="paymentDetails" />       */}

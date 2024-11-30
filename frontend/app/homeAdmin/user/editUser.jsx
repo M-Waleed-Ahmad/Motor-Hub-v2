@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -6,27 +6,50 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons'; // Ensure this package is installed
+import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-export default function EditUsers({ navigation }) {
-  const router= useRouter();
-  // Sample data for demonstration
-  const [users, setUsers] = useState([
-    { id: '1', username: 'JohnDoe', password: 'password123', cnic: '12345' },
-    { id: '2', username: 'JaneSmith', password: 'mypassword', cnic: '67890' },
-  ]);
+import axios from 'axios';
 
+export default function EditUsers() {
+  const router = useRouter();
+
+  const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredUsers, setFilteredUsers] = useState(users);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Function to handle search
+  // Fetch Users on Component Mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get('http://192.168.18.225:8000/admin/users');
+        setUsers(response.data);
+        setFilteredUsers(response.data);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to load users. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Handle User Search
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query) {
       const filtered = users.filter((user) =>
-        user.username.toLowerCase().includes(query.toLowerCase())
+        user.full_name.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredUsers(filtered);
     } else {
@@ -34,25 +57,68 @@ export default function EditUsers({ navigation }) {
     }
   };
 
-  // Function to populate form with selected user's data
-  const handleUserSelect = (user) => {
-    setSelectedUser(user);
-  };
+  // Handle User Update
+  const handleConfirmChanges = async () => {
+    if (!selectedUser) {
+      Alert.alert('Error', 'No user selected for update.');
+      return;
+    }
 
-  // Function to update user details
-  const handleConfirmChanges = () => {
-    console.log('Updated User Details:', selectedUser);
-    // Update logic here
+    // Basic Form Validation
+    if (!selectedUser.full_name || !selectedUser.email || !selectedUser.password) {
+      Alert.alert('Validation Error', 'Please fill all the required fields.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+      console.log('CSRF Token:', csrfToken);
+
+      await axios.put(
+        `http://192.168.18.225:8000/admin/users/${selectedUser.user_id}`,
+      {
+         full_name:selectedUser.full_name,
+          email:selectedUser.email,
+          password:selectedUser.password
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+          },
+        }
+      );
+
+      // Update Local State
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.user_id === selectedUser.user_id ? selectedUser : user
+        )
+      );
+      setFilteredUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.user_id === selectedUser.user_id ? selectedUser : user
+        )
+      );
+
+      Alert.alert('Success', 'User details updated successfully.');
+      setSelectedUser(null); // Reset Form
+    } catch (error) {
+      console.error('Error updating user:', error);
+      Alert.alert('Update Error', 'Failed to update user. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Header with Back Button */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()} // Adjust navigation logic as per your setup
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <FontAwesome name="arrow-left" size={20} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Users</Text>
@@ -67,45 +133,54 @@ export default function EditUsers({ navigation }) {
         onChangeText={handleSearch}
       />
 
-      {/* List of Search Results */}
-      {filteredUsers.length > 0 && (
-        <FlatList
-          data={filteredUsers}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.userItem}
-              onPress={() => handleUserSelect(item)}
-            >
-              <Text style={styles.userText}>{item.username}</Text>
-            </TouchableOpacity>
-          )}
-        />
-      )}
+      {/* Error or Loading State */}
+      {loading && <ActivityIndicator size="large" color="#4caf50" />}
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {/* Form to Edit Selected User */}
+      {/* User List */}
+      <FlatList
+        data={filteredUsers}
+        keyExtractor={(item) => item.user_id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.userItem}
+            onPress={() => setSelectedUser(item)}
+          >
+            <Text style={styles.userText}>{item.full_name}</Text>
+            <Text style={styles.userText}>{item.email}</Text>
+            {item.profile_image && (
+              <Image
+                source={{ uri: item.profile_image_url }}
+                style={styles.profileImage}
+              />
+            )}
+          </TouchableOpacity>
+        )}
+      />
+
+      {/* Edit Form */}
       {selectedUser && (
         <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Username"
+            placeholder="Full Name"
             placeholderTextColor="#aaa"
-            value={selectedUser.username}
-            onChangeText={(text) => setSelectedUser({ ...selectedUser, username: text })}
+            value={selectedUser.full_name || ''}
+            onChangeText={(text) => setSelectedUser({ ...selectedUser, full_name: text })}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#aaa"
+            value={selectedUser.email || ''}
+            onChangeText={(text) => setSelectedUser({ ...selectedUser, email: text })}
           />
           <TextInput
             style={styles.input}
             placeholder="Password"
             placeholderTextColor="#aaa"
-            secureTextEntry
+            value={selectedUser.password || ''}
             onChangeText={(text) => setSelectedUser({ ...selectedUser, password: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="CNIC"
-            placeholderTextColor="#aaa"
-            value={selectedUser.cnic}
-            onChangeText={(text) => setSelectedUser({ ...selectedUser, cnic: text })}
           />
           <TouchableOpacity
             style={styles.confirmButton}
@@ -124,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: '#1c1c1e',
-    marginTop:40,
+    marginTop: 40,
   },
   header: {
     flexDirection: 'row',
@@ -148,15 +223,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 15,
   },
+  errorText: {
+    color: '#ff3b30',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   userItem: {
     backgroundColor: '#2c2c2e',
     borderRadius: 8,
     padding: 15,
     marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   userText: {
     color: '#fff',
     fontSize: 16,
+    flex: 1,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginLeft: 10,
   },
   formContainer: {
     marginTop: 20,

@@ -17,15 +17,19 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    protected $primaryKey = 'user_id';
     protected $fillable = [
         'full_name',
         'email',
         'password_hash',
         'phone_number',
+        'is_approved', // Add this field
         'address',
         'profile_image',
         'user_type',
     ];
+    protected $guarded = []; // Ensure no fields are guarded.
+
 
     public function vehicles()
     {
