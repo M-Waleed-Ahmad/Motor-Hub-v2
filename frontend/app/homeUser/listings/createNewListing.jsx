@@ -96,7 +96,7 @@ const CreateListing = () => {
     ListingData.append('listing_type', isForSale ? 'sale' : 'rent');
     ListingData.append('condition', 5); // Assuming a default value of 5
     ListingData.append('availability_status', 'available'); // Default status
-    ListingData.append('price', isAuction ? null : price);
+    ListingData.append('price', isAuction ? 0 : price);
     ListingData.append('model', vehicleModel); // Assuming user ID is stored in AsyncStorage
     ListingData.append('user', userId); // Assuming user ID is stored in AsyncStorage
     // Attach the image

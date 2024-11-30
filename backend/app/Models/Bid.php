@@ -9,7 +9,7 @@ class Bid extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'bid_id';
+    protected $primaryKey = 'bid_id'; // Custom primary key
 
     protected $fillable = [
         'vehicle_id',

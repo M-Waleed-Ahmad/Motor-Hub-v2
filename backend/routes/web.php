@@ -7,17 +7,44 @@ use App\Http\Controllers\AdminController;
 use App\Http\Middleware\ApiMiddleware;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\BidController;
+
+
+
 
 
 
 Route::post('/register', [AuthController::class, 'register']);
 
+Route::get('/vehicleBids', [BidController::class, 'fetchVehicleDetails']);
+Route::post('/bids', [BidController::class, 'submitBid']);
+
+Route::get('/myListings', [VehicleController::class, 'getMyListings']);
+
+// Get vehicles the user has placed bids on (Bids Made)
+Route::get('/bidsMade', [VehicleController::class, 'getBidsMade']);
+
+
+Route::get('/getBids/{vehicle_id}', [BidController::class, 'getVehicleBids']);
+Route::post('/approveBid', [BidController::class, 'approveBid']);
+Route::post('/closeBid', [BidController::class, 'closeBid']);
+
+
+
 Route::get('/test', function () {
     return response()->json(['message' => 'Hello from Laravel']);
 });
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::post('/user-update',[UserController::class,'update']);
+
+Route::post('/vehicle-register',[VehicleController::class,'create_vehicle']);
+Route::get('/vehicles',[VehicleController::class,'index']);
+Route::get('/vehicle/{id}',[VehicleController::class,'show']);
+
+
+Route::post('/make-payment', [PaymentController::class, 'makePayment']);
 
 Route::get('/csrf-token', function () {
     return response()->json(['csrf_token' => csrf_token()]);

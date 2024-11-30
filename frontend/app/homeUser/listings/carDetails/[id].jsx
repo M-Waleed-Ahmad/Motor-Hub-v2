@@ -39,8 +39,8 @@ const VehicleDetails = () => {
 
   // Handle button click for Buy or Bid
   const handleActionButton = async () => {
+    await AsyncStorage.setItem('vehicle_id', id); // Store vehicle ID
     if (vehicle.bid === 'no') {
-      await AsyncStorage.setItem('vehicle_id', id); // Store vehicle ID
       await AsyncStorage.setItem('vehicle', JSON.stringify(vehicle)); // Store vehicle details
       router.push('/homeUser/listings/paymentOptions');
     } else if (vehicle.bid === 'yes') {

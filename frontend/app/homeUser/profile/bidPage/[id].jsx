@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,120 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function BidDetailsPage() {
+  const { id } = useLocalSearchParams(); // Extract id from route params
   const router = useRouter();
+  const [vehicle, setVehicle] = useState(null); // Holds vehicle details
+  const [bids, setBids] = useState([]); // Holds bid details
+  const [loading, setLoading] = useState(true); // Loading state
 
-  const bids = [
-    { id: '1', name: 'Test Name 1', bid: 10000 },
-    { id: '2', name: 'Test Name 2', bid: 10000 },
-    { id: '3', name: 'Test Name 3', bid: 10000 },
-    { id: '4', name: 'Test Name 4', bid: 10000 },
-    { id: '5', name: 'Test Name 5', bid: 10000 },
-  ];
+  // Fetch vehicle details and bids
+  const fetchBids = async () => {
+    setLoading(true);
+    console.log('Fetching bids for vehicle:', id);
+    try {
+      const response = await axios.get(`http://192.168.18.225:8000/getBids/${id}`);
+      const data = response.data;
+
+      if (data.vehicle) {
+        setVehicle(data.vehicle);
+      }
+
+      if (data.bids && Array.isArray(data.bids)) {
+        setBids(data.bids);
+      } else {
+        Alert.alert('Error', 'No bids found.');
+      }
+    } catch (error) {
+      console.error('Error fetching bids:', error);
+      Alert.alert('Error', 'Unable to fetch bids. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Approve a bid for the vehicle
+  const approveBid = async (bidId) => {
+    try {
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+
+      const response = await axios.post(
+        `http://192.168.18.225:8000/approveBid`,
+        { bid_id: bidId, id: id },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Bid has been approved.');
+        fetchBids(); // Refresh bids after approval
+      } else {
+        Alert.alert('Error', 'Failed to approve the bid. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error approving bid:', error);
+      Alert.alert('Error', 'Unable to approve bid. Please try again.');
+    }
+  };
+
+  // Close the bidding for the vehicle
+  const closeBid = async () => {
+    try {
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+
+      const response = await axios.post(
+        `http://192.168.18.225:8000/closeBid`,
+        { id: id },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Bidding has been closed.');
+        fetchBids(); // Refresh vehicle details after closing the bid
+      } else {
+        Alert.alert('Error', 'Failed to close the bid. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error closing bid:', error);
+      Alert.alert('Error', 'Unable to close bid. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    fetchBids();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00BFFF" />
+        <Text style={styles.loadingText}>Loading vehicle and bids...</Text>
+      </View>
+    );
+  }
+
+  const isClosed = vehicle?.availability_status === 'sold'; // Determine if bidding is closed
 
   return (
     <View style={styles.container}>
@@ -28,48 +128,69 @@ export default function BidDetailsPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <FontAwesome name="arrow-left" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Vehicle's Details</Text>
-        <TouchableOpacity style={styles.closeBidButton}>
-          <Text style={styles.closeBidText}>Close Bid</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Vehicle Image */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{
-            uri: 'https://via.placeholder.com/150', // Replace with the actual image URL
-          }}
-          style={styles.vehicleImage}
-        />
-      </View>
-
-      {/* Vehicle Name */}
-      <View style={styles.vehicleNameContainer}>
-        <Text style={styles.vehicleName}>Ferrari</Text>
-      </View>
-
-      {/* Bid List Header */}
-      <View style={styles.bidHeader}>
-        <Text style={styles.headerColumn}>Name</Text>
-        <Text style={styles.headerColumn}>Bid</Text>
-        <Text style={styles.headerColumn}>Action</Text>
-      </View>
-
-      {/* Bid List */}
-      <FlatList
-        data={bids}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.bidRow}>
-            <Text style={styles.rowText}>{item.name}</Text>
-            <Text style={styles.rowText}>{item.bid}</Text>
-            <TouchableOpacity style={styles.approveButton}>
-              <Text style={styles.approveText}>Approve</Text>
-            </TouchableOpacity>
-          </View>
+        <Text style={styles.headerTitle}>Vehicle Bids</Text>
+        {!isClosed && (
+          <TouchableOpacity style={styles.closeBidButton} onPress={closeBid}>
+            <Text style={styles.closeBidText}>Close Bids</Text>
+          </TouchableOpacity>
         )}
-      />
+      </View>
+
+      {/* Vehicle Details */}
+      {vehicle && (
+        <View>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: vehicle.image || 'https://via.placeholder.com/300' }}
+              style={styles.vehicleImage}
+            />
+          </View>
+          <View style={styles.vehicleDetails}>
+            <Text style={styles.vehicleName}>{vehicle.name || 'Unnamed Vehicle'}</Text>
+            <Text style={styles.vehicleAvailability}>
+              Availability: {vehicle.availability_status || 'N/A'}
+            </Text>
+            <Text style={styles.vehiclePrice}>Price: {vehicle.price || 'N/A'}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Bids Section */}
+      {!isClosed ? (
+        <>
+          <View style={styles.bidHeader}>
+            <Text style={styles.headerColumn}>Name</Text>
+            <Text style={styles.headerColumn}>Bid</Text>
+            <Text style={styles.headerColumn}>Action</Text>
+          </View>
+
+          {bids.length > 0 ? (
+            <FlatList
+              data={bids}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.bidRow}>
+                  <Text style={styles.rowText}>{item.bidder_name}</Text>
+                  <Text style={styles.rowText}>{item.bid_amount}</Text>
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => approveBid(item.id)}
+                    disabled={item.bid_status === 'won'}
+                  >
+                    <Text style={styles.approveText}>
+                      {item.bid_status === 'won' ? 'Approved' : 'Approve'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+          ) : (
+            <Text style={styles.noBidsText}>No bids available for this vehicle.</Text>
+          )}
+        </>
+      ) : (
+        <Text style={styles.closedText}>This bidding has been closed.</Text>
+      )}
     </View>
   );
 }
@@ -78,7 +199,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
-    marginTop: 30, // Add margin at the top
+    paddingTop: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
   },
   header: {
     flexDirection: 'row',
@@ -114,7 +245,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
   },
-  vehicleNameContainer: {
+  vehicleDetails: {
     backgroundColor: '#1E1E1E',
     padding: 10,
     marginHorizontal: 20,
@@ -125,6 +256,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  vehicleAvailability: {
+    color: '#aaa',
+    fontSize: 16,
+    marginVertical: 5,
+  },
+  vehiclePrice: {
+    color: '#fff',
+    fontSize: 16,
   },
   bidHeader: {
     flexDirection: 'row',
@@ -165,5 +305,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  noBidsText: {
+    color: '#aaa',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  closedText: {
+    textAlign: 'center',
+    color: '#ff4d4d',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
   },
 });

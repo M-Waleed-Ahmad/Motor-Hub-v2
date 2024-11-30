@@ -1,21 +1,64 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('My Listings');
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    { id: 2, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    { id: 3, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-    { id: 4, name: 'Car Name Unknown', price: 'Free', image: 'https://via.placeholder.com/150' },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Function to handle removing a product
-  const removeProduct = (id) => {
-    setProducts(products.filter((product) => product.id !== id));
+  // Fetch data based on the active tab
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const userString = await AsyncStorage.getItem('user'); // Get logged-in user details
+      if (!userString) {
+        Alert.alert('Error', 'User not logged in');
+        router.push('/login');
+        return;
+      }
+
+      const user = JSON.parse(userString);
+      const endpoint =
+        activeTab === 'My Listings'
+          ? `http://192.168.18.225:8000/myListings?user_id=${user.user_id}`
+          : `http://192.168.18.225:8000/bidsMade?user_id=${user.user_id}`;
+
+      const response = await axios.get(endpoint);
+
+      // Validate response before setting the state
+      if (Array.isArray(response.data)) {
+        setProducts(response.data); // Update products state with fetched data
+      } else {
+        Alert.alert('Error', 'Invalid response from the server.');
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      Alert.alert('Error', 'Unable to fetch data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch products when the active tab changes
+  useEffect(() => {
+    fetchProducts();
+  }, [activeTab]);
+
+  // Handle navigation to the appropriate page based on the tab
+  const handlePressProduct = (item) => {
+    if (activeTab === 'My Listings') {
+      // Go to Bid Approval page
+      console.log(item.vehicle_id);
+      router.push(`/homeUser/profile/bidPage/${item.vehicle_id}`);
+    } else if (activeTab === 'Bids Made') {
+      // Go to Bid Making page
+      router.push(`/homeUser/listings/carBid/`);
+    }
   };
 
   return (
@@ -44,149 +87,60 @@ export default function ProductListingsPage() {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchBar}>
-        <TextInput style={styles.searchInput} placeholder="Hinted search text" placeholderTextColor="#888" />
-        <TouchableOpacity>
-          <FontAwesome name="search" size={20} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="filter" size={20} color="#fff" style={styles.filterIcon} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Product List */}
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => router.push(`/homeUser/profile/bidPage/1`)}
-            style={styles.productCard}
-          >
-            <Image source={{ uri: item.image }} style={styles.productImage} />
-            <View style={styles.productInfo}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <View style={styles.rating}>
-                {[...Array(5)].map((_, i) => (
-                  <FontAwesome key={i} name="star" size={14} color="#00b4d8" />
-                ))}
-              </View>
-              <Text style={styles.productPrice}>Price: {item.price}</Text>
-            </View>
-            {/* Remove Button */}
+      {/* Loading State */}
+      {loading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.vehicle_id.toString()}
+          renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={(e) => {
-                e.stopPropagation(); // Prevent triggering the parent onPress
-                removeProduct(item.id);
-              }}
-              style={styles.removeButton}
+              onPress={() => handlePressProduct(item)} // Navigate based on active tab
+              style={styles.productCard}
             >
-              <FontAwesome name="close" size={20} color="#fff" />
+              <Image
+                source={{ uri: item.images[0]?.image_url || 'https://via.placeholder.com/150' }}
+                style={styles.productImage}
+              />
+              <View style={styles.productInfo}>
+                <Text style={styles.productName}>{item.model}</Text>
+                <Text style={styles.productPrice}>Price: {item.price}</Text>
+                {activeTab === 'My Listings' && (
+                  <Text style={styles.bidsCount}>Bids: {item.bids_count}</Text>
+                )}
+                {activeTab === 'Bids Made' && (
+                  <Text style={styles.bidAmount}>
+                    Your Bid: {item.bids?.[0]?.bid_amount || 'N/A'}
+                  </Text>
+                )}
+              </View>
             </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-        style={styles.productList}
-      />
-
+          )}
+          style={styles.productList}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    padding: 10,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  tabs: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#1E1E1E',
-    paddingVertical: 10,
-  },
-  tab: {
-    padding: 10,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#00b4d8',
-  },
-  tabText: {
-    color: '#888',
-    fontSize: 16,
-  },
-  activeTabText: {
-    color: '#fff',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    margin: 10,
-    paddingHorizontal: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 16,
-  },
-  filterIcon: {
-    marginLeft: 10,
-  },
-  productList: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
-  productCard: {
-    flexDirection: 'row',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    marginVertical: 5,
-    padding: 10,
-    alignItems: 'center',
-  },
-  productImage: {
-    width: 100,
-    height: 70,
-    borderRadius: 10,
-  },
-  productInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  productName: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  rating: {
-    flexDirection: 'row',
-    marginVertical: 5,
-  },
-  productPrice: {
-    color: '#aaa',
-    fontSize: 14,
-  },
-  removeButton: {
-    marginLeft: 10,
-    backgroundColor: '#ff4d4d',
-    borderRadius: 10,
-    padding: 5,
-  },
+  container: { flex: 1, backgroundColor: '#121212' },
+  header: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', padding: 10 },
+  backButton: { padding: 5 },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
+  tabs: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#1E1E1E', paddingVertical: 10 },
+  tab: { padding: 10 },
+  activeTab: { borderBottomWidth: 2, borderBottomColor: '#00b4d8' },
+  tabText: { color: '#888', fontSize: 16 },
+  activeTabText: { color: '#fff' },
+  productList: { flex: 1, paddingHorizontal: 10 },
+  productCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 10, marginVertical: 5, padding: 10 },
+  productImage: { width: 100, height: 70, borderRadius: 10 },
+  productInfo: { flex: 1, marginLeft: 10 },
+  productName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  productPrice: { color: '#aaa', fontSize: 14 },
+  bidsCount: { color: '#aaa', fontSize: 14 },
+  bidAmount: { color: '#aaa', fontSize: 14 },
+  loadingText: { color: '#aaa', fontSize: 16, textAlign: 'center', marginTop: 20 },
 });

@@ -1,5 +1,4 @@
 import React from 'react';
-import { View, TextInput, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   View,

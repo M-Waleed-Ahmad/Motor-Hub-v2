@@ -81,7 +81,7 @@ class VehicleController extends Controller
                 'registeredIn' => $request->registeredIn ?? 'Unknown',
                 'color' => $request->color ?? 'Unknown',
                 'model' => $request->model,
-                'price' => $request->price,
+                'price' => $request->price ?? 0,
                 'vehicle_type' => $request->vehicle_type,
                 'bid' => $request->bid ?? 'no',
                 'listing_type' => $request->listing_type ?? 'sale',
@@ -188,6 +188,57 @@ class VehicleController extends Controller
          ]);
      }
      
+
+
+     public function getMyListings(Request $request)
+     {
+         try {
+             $userId = $request->query('user_id'); // Get user ID from query params
+             $vehicles = Vehicle::withCount('bids') // Count the number of bids on each vehicle
+                 ->where('user_id', $userId)
+                 ->with('images') // Include images for display
+                 ->get();
+ 
+             $vehicles = $vehicles->map(function ($vehicle) {
+                 $vehicle->images = $vehicle->images->map(function ($image) {
+                     $image->image_url = asset('storage/vehicle_images/' . basename($image->image_url));
+                     return $image;
+                 });
+                 return $vehicle;
+             });
+ 
+             return response()->json($vehicles, 200);
+         } catch (\Exception $e) {
+             return response()->json(['error' => 'Error fetching my listings', 'details' => $e->getMessage()], 500);
+         }
+     }
+ 
+     // Fetch vehicles the user has bid on
+     public function getBidsMade(Request $request)
+     {
+         try {
+             $userId = $request->query('user_id'); // Get user ID from query params
+             $vehicles = Vehicle::whereHas('bids', function ($query) use ($userId) {
+                 $query->where('bidder_id', $userId);
+             })
+                 ->with(['bids' => function ($query) use ($userId) {
+                     $query->where('bidder_id', $userId); // Fetch user's specific bid
+                 }, 'images']) // Include images for display
+                 ->get();
+ 
+             $vehicles = $vehicles->map(function ($vehicle) {
+                 $vehicle->images = $vehicle->images->map(function ($image) {
+                     $image->image_url = asset('storage/vehicle_images/' . basename($image->image_url));
+                     return $image;
+                 });
+                 return $vehicle;
+             });
+ 
+             return response()->json($vehicles, 200);
+         } catch (\Exception $e) {
+             return response()->json(['error' => 'Error fetching bids made', 'details' => $e->getMessage()], 500);
+         }
+     }
      
 
     /**
