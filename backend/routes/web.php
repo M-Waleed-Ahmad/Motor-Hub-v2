@@ -48,10 +48,11 @@ Route::get('getFavourites', [FavouritesController::class, 'getFavourites']);
 Route::post('/make-payment', [PaymentController::class, 'makePayment']);
 
 // Admin Routes
-Route::post('/admin/add-admin', [AdminController::class, 'addAdmin']);
-Route::delete('/admin/remove-admin/{id}', [AdminController::class, 'removeAdmin']);
-Route::post('/admin/add-user', [AdminController::class, 'addUser']);
-Route::delete('/admin/remove-user/{id}', [AdminController::class, 'removeUser']);
+Route::post('/admin/addAdmin', [AdminController::class, 'addAdmin']);
+Route::get('/admin/users', [AdminController::class, 'index']);
+Route::delete('/admin/users/{id}', [AdminController::class, 'removeUserOrAdmin']);
+Route::post('/admin/users/approve/{id}', [AdminController::class, 'approveUser']);
+Route::put('/admin/users/{id}', [UserController::class, 'update']); // Update user
 
 // Miscellaneous Routes
 Route::get('/csrf-token', function () {
@@ -63,3 +64,5 @@ Route::get('/test', function () {
 Route::get('/', function () {
     return view('welcome');
 });
+
+

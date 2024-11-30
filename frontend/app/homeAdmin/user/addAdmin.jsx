@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   View,
@@ -7,38 +7,38 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ImageBackground,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 export default function AddAdmin({ navigation }) {
-  const router=useRouter();
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const handleAddAdmin = async () => {
-    if (!fullName || !email || !password || !confirmPassword || !phoneNumber) {
+    if (!username || !password || !email || !address || !phoneNumber) {
       Alert.alert('Add Admin Failed', 'All fields are required');
       return;
     }
-    if (password !== confirmPassword) {
-      Alert.alert('Add Admin Failed', 'Passwords do not match');
-      return;
-    }
-  
+
     try {
       // Step 1: Fetch CSRF Token
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
-  
+
       // Step 2: Make POST request with CSRF token
       const response = await axios.post(
-        'http://192.168.18.193:8000/api/admins', // Replace with your actual add admin endpoint
+        'http://192.168.18.225:8000/admin/addAdmin', // Replace with your actual add admin endpoint
         {
-          full_name: fullName,
-          email,
+          full_name:username,
           password,
+          email,
+          address,
           phone_number: phoneNumber,
         },
         {
@@ -49,9 +49,9 @@ export default function AddAdmin({ navigation }) {
           },
         }
       );
-  
+
       console.log('Add Admin Response:', response);
-  
+
       if (response.status === 201 || response.status === 200) {
         Alert.alert('Admin Added Successfully', 'A new admin has been added!');
       }
@@ -63,7 +63,7 @@ export default function AddAdmin({ navigation }) {
       );
     }
   };
-  
+
   return (
     <View style={styles.container}>
       {/* Header with Back Button */}
@@ -82,21 +82,41 @@ export default function AddAdmin({ navigation }) {
         style={styles.input}
         placeholder="Username"
         placeholderTextColor="#aaa"
+        value={username}
+        onChangeText={setUsername}
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
         placeholderTextColor="#aaa"
+        value={password}
+        onChangeText={setPassword}
       />
       <TextInput
         style={styles.input}
-        placeholder="CNIC"
+        placeholder="Email"
         placeholderTextColor="#aaa"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Address"
+        placeholderTextColor="#aaa"
+        value={address}
+        onChangeText={setAddress}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Phone Number"
+        placeholderTextColor="#aaa"
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
       />
 
       {/* Add Admin Button */}
-      <TouchableOpacity style={styles.addButton} onPress={() => console.log('Admin Added')}>
+      <TouchableOpacity style={styles.addButton} onPress={handleAddAdmin}>
         <Text style={styles.buttonText}>Add Admin</Text>
       </TouchableOpacity>
     </View>
@@ -108,7 +128,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     backgroundColor: '#1c1c1e',
-    marginTop:30,
+    marginTop: 30,
   },
   header: {
     flexDirection: 'row',
