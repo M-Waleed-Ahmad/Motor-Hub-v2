@@ -16,22 +16,26 @@ class VehicleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         Log::info("Attempting to retrieve all vehicles");
-    
+        $userId = $request->query('user_id'); // Get user ID from query params
+
         // Fetch all vehicles with their associated images
         $vehicles = Vehicle::with('images')->get();
-    
+
         if ($vehicles->isEmpty()) {
             Log::warning("No vehicles found in the database");
             return response()->json(['message' => 'No vehicles available'], 404);
         }
-    
-        // Process each vehicle to include the correct public storage path for images
-        $vehicles = $vehicles->map(function ($vehicle) {
+
+        // Filter and process each vehicle to include the correct public storage path for images
+        $vehicles = $vehicles->filter(function ($vehicle) use ($userId) {
+            return $vehicle->user_id != $userId;
+        })->map(function ($vehicle) {
             $user = User::where('user_id', $vehicle->user_id)->first();
             $owner = [
+                'user_id' => $user->user_id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
@@ -44,9 +48,9 @@ class VehicleController extends Controller
             });
             return $vehicle;
         });
-    
-        Log::info("All vehicles retrieved successfully");
-    
+
+        Log::info("Filtered vehicles retrieved successfully");
+
         return response()->json($vehicles);
     }
     
@@ -155,6 +159,7 @@ class VehicleController extends Controller
          }
          $user = User::where('user_id', $vehicle->user_id)->first();
          $owner = [
+             'user_id' => $user->user_id,
              'name' => $user->full_name,
              'email' => $user->email,
              'phone' => $user->contact_number,

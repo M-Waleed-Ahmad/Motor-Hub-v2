@@ -5,13 +5,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+
 const VehicleDetails = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // Get vehicle ID from query params
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false); // State to track if the vehicle is in favorites
-
+  const [isOwner, setIsOwner] = useState(false); // State to track if the user is the owner
 
   // Fetch vehicle details based on ID
   useEffect(() => {
@@ -24,6 +25,16 @@ const VehicleDetails = () => {
         const data = await response.json();
         console.log('Fetched vehicle details:', data);
         setVehicle(data); // Set vehicle data
+
+        // Check if the logged-in user is the owner
+        const userString = await AsyncStorage.getItem('user');
+        const user = JSON.parse(userString);
+        console.log('Logged-in user:', user.user_id);
+        console.log('Vehicle owner:', data.owner);
+        if (user.user_id === data.owner.user_id) {
+          console.log('User is the owner of this vehicle');
+          setIsOwner(true);
+        }
       } catch (error) {
         console.error('Error fetching vehicle details:', error);
       } finally {
@@ -31,12 +42,10 @@ const VehicleDetails = () => {
       }
     };
 
-    if (id) 
-      {
-        fetchVehicleDetails();
-        checkFavoriteStatus();
-
-      }; // Only fetch if ID is provided
+    if (id) {
+      fetchVehicleDetails();
+      checkFavoriteStatus();
+    } // Only fetch if ID is provided
   }, [id]);
 
   // Function to navigate back
@@ -71,10 +80,9 @@ const VehicleDetails = () => {
     }
   };
 
-
   const toggleFavorite = async () => {
     try {
-      const userString = await AsyncStorage.getItem('user'); 
+      const userString = await AsyncStorage.getItem('user');
       const user = JSON.parse(userString);
       const userId = user.user_id;
       console.log('Fetching CSRF Token...');
@@ -94,7 +102,7 @@ const VehicleDetails = () => {
             'X-Requested-With': 'XMLHttpRequest',
           },
         });
-        
+
         setIsFavorite(false);
       } else {
         // Add to favorites
@@ -112,7 +120,7 @@ const VehicleDetails = () => {
             },
           }
         );
-        
+
         setIsFavorite(true);
       }
     } catch (error) {
@@ -120,16 +128,22 @@ const VehicleDetails = () => {
     }
   };
 
-  // Show loading indicator while fetching data
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00BFFF" />
-        <Text style={styles.loadingText}>Loading vehicle details...</Text>
-      </View>
-    );
-  }
-  
+  const handleDeleteVehicle = async () => {
+    try {
+      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+      await axios.delete(`http://192.168.18.225:8000/vehicle/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      router.push('/homeUser/listings/carListings'); // Navigate back to listings after deletion
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+    }
+  };
 
   // Show loading indicator while fetching data
   if (loading) {
@@ -197,11 +211,18 @@ const VehicleDetails = () => {
         <Text style={styles.info}>📞 {vehicle.owner.phone || 'Not provided'}</Text>
 
         {/* Add to Favorites Button */}
-        <TouchableOpacity onPress={toggleFavorite} style={styles.favButton}>
-          <Text style={styles.favButtonText}>{isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</Text>
-        </TouchableOpacity>
-        {/* Buy or Bid Button */}
-        {vehicle.availability_status === 'sold' ? (
+        {!isOwner && (
+          <TouchableOpacity onPress={toggleFavorite} style={styles.favButton}>
+            <Text style={styles.favButtonText}>{isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Buy, Bid or Delete Button */}
+        {isOwner ? (
+          <TouchableOpacity onPress={handleDeleteVehicle} style={[styles.button, { backgroundColor: '#e74c3c' }]}>
+            <Text style={styles.buttonText}>Delete</Text>
+          </TouchableOpacity>
+        ) : vehicle.availability_status === 'sold' ? (
           <Text style={styles.soldText}>Sold</Text>
         ) : (
           <TouchableOpacity

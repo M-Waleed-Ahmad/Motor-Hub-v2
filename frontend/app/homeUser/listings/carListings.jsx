@@ -13,6 +13,7 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter, Link } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('Buy a Vehicle');
@@ -30,7 +31,10 @@ export default function ProductListingsPage() {
   const fetchVehicles = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://192.168.18.225:8000/vehicles');
+      const userString = await AsyncStorage.getItem('user');
+      const user = JSON.parse(userString);
+      const user_id = user.user_id;
+      const response = await fetch(`http://192.168.18.225:8000/vehicles?user_id=${user_id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch vehicles');
       }
@@ -152,35 +156,40 @@ export default function ProductListingsPage() {
       </View>
 
       {/* Product List */}
-      <FlatList
-        data={filteredVehicles}
-        keyExtractor={(item) => item.vehicle_id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.productCard}
-            onPress={() => router.push(`/homeUser/listings/carDetails/${item.vehicle_id}`)}
-          >
-            <Image source={{ uri: item.images?.[0]?.image_url || 'https://via.placeholder.com/150' }} style={styles.productImage} />
-            <View style={styles.productInfo}>
-              <Text style={styles.productName}>{item.name || 'Unnamed Vehicle'}</Text>
-              <View style={styles.rating}>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <FontAwesome
-                    key={i}
-                    name="star"
-                    size={16} // Slightly larger for better visibility
-                    color={i < item.condition ? '#FFD700' : '#555'} // Gold for active stars, grey for inactive
-                    style={styles.star}
-                  />
-                ))}
+      {filteredVehicles.length === 0 ? (
+        <View style={styles.noVehiclesContainer}>
+          <Text style={styles.noVehiclesText}>No vehicles found.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredVehicles}
+          keyExtractor={(item) => item.vehicle_id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.productCard}
+              onPress={() => router.push(`/homeUser/listings/carDetails/${item.vehicle_id}`)}
+            >
+              <Image source={{ uri: item.images?.[0]?.image_url || 'https://via.placeholder.com/150' }} style={styles.productImage} />
+              <View style={styles.productInfo}>
+                <Text style={styles.productName}>{item.name || 'Unnamed Vehicle'}</Text>
+                <View style={styles.rating}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <FontAwesome
+                      key={i}
+                      name="star"
+                      size={16} // Slightly larger for better visibility
+                      color={i < item.condition ? '#FFD700' : '#555'} // Gold for active stars, grey for inactive
+                      style={styles.star}
+                    />
+                  ))}
+                </View>
+                <Text style={styles.productPrice}>Price: {item.price || 'N/A'}</Text>
               </View>
-         
-              <Text style={styles.productPrice}>Price: {item.price || 'N/A'}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        style={styles.productList}
-      />
+            </TouchableOpacity>
+          )}
+          style={styles.productList}
+        />
+      )}
       
       <View style={styles.bottomNav}>
         <TouchableOpacity>
@@ -311,5 +320,14 @@ const styles = StyleSheet.create({
   rating: {
     flexDirection: 'row',
     marginVertical: 5,
+  },
+  noVehiclesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noVehiclesText: {
+    color: '#fff',
+    fontSize: 18,
   },
 });
