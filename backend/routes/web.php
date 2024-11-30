@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
 use App\Http\Middleware\ApiMiddleware;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\PaymentController;
@@ -15,14 +17,15 @@ Route::get('/test', function () {
 });
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::post('vehicle-register',[VehicleController::class,'create_vehicle']);
-Route::get('/vehicle/{vehicle_id}', [VehicleController::class, 'show']);
-Route::get('/vehicles', [VehicleController::class, 'index']);
+Route::post('/user-update',[UserController::class,'update']);
 
-Route::post('/make-payment', [PaymentController::class, 'makePayment']);
 Route::get('/csrf-token', function () {
     return response()->json(['csrf_token' => csrf_token()]);
 });
 Route::get('/', function () {
     return view('welcome');
 });
+Route::post('/admin/add-admin', [AdminController::class, 'addAdmin']);   
+Route::delete('/admin/remove-admin/{id}', [AdminController::class, 'removeAdmin']); 
+Route::post('/admin/add-user', [AdminController::class, 'addUser']);   
+Route::delete('/admin/remove-user/{id}', [AdminController::class, 'removeUser']); 
