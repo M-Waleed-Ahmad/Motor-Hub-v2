@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { BASE_URL } from '../../../utils/config';
 export default function RemoveUsers() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +26,7 @@ export default function RemoveUsers() {
         const user = JSON.parse(userString);
         const userId = user.user_id;
         setUser(userId);
-        const response = await axios.get('http://192.168.18.225:8000/admin/users');
+        const response = await axios.get(`${BASE_URL}/admin/users`);
         console.log('Users:', response.data);
         setUsers(response.data);
       } catch (error) {
@@ -41,12 +41,12 @@ export default function RemoveUsers() {
   const handleRemoveUser = async (userId) => {
     try {
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
   
       const response = await axios.delete(
-        `http://192.168.18.225:8000/admin/users/${userId}`,
+        `${BASE_URL}/admin/users/${userId}`,
         {
           headers: {
             'X-CSRF-TOKEN': csrfToken,

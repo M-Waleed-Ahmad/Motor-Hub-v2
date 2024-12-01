@@ -15,6 +15,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
+import { BASE_URL } from '../../../utils/config';
 
 export default function AdminProfilePage() {
   const router = useRouter();
@@ -52,11 +53,11 @@ export default function AdminProfilePage() {
 
     try {
       setLoading(true);
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
 
       const response = await axios.post(
-        'http://192.168.18.225:8000/updateAdminProfile',
+        `${BASE_URL}/updateAdminProfile`,
         {
           user_id: userInfo.user_id,
           [editingField]: tempValue,
@@ -109,11 +110,11 @@ export default function AdminProfilePage() {
 
       try {
         setLoading(true);
-        const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+        const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
         const csrfToken = csrfResponse.data.csrf_token;
 
         const response = await axios.post(
-          'http://192.168.18.225:8000/updateAdminProfileImage',
+          `${BASE_URL}/updateAdminProfileImage`,
           formData,
           {
             headers: {

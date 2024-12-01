@@ -57,11 +57,11 @@ export default function ProfilePage() {
         setLoading(true);
         // Step 1: Fetch CSRF Token
         console.log('Fetching CSRF Token...');
-        const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+        const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
         const csrfToken = csrfResponse.data.csrf_token;
         console.log('CSRF Token:', csrfToken);
   
-        const response = await axios.post('http://192.168.18.225:8000/updateProfileImage', formData, {
+        const response = await axios.post(`${BASE_URL}/updateProfileImage`, formData, {
           headers: { 'Content-Type': 'multipart/form-data',
             'X-CSRF-TOKEN': csrfToken,
             'X-Requested-With': 'XMLHttpRequest',
@@ -189,33 +189,8 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
 
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Link href="/homeUser/profile">
-            <FontAwesome name="user" size={30} color="#00b4d8" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/listings/carListings">
-            <FontAwesome name="car" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/home">
-            <FontAwesome name="home" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/notifications">
-            <FontAwesome name="bell" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/settings">
-            <FontAwesome name="cog" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation */}
+      <BottomNav unreadNotifications={unreadNotifications} />
     </View>
   );
 }

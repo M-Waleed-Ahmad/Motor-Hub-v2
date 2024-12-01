@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
+import { BASE_URL } from '../../../utils/config';
 const BidPage = () => {
   const [vehicle, setVehicle] = useState(null); // Vehicle details state
   const [loading, setLoading] = useState(true); // Loading state
@@ -25,7 +25,7 @@ const BidPage = () => {
   // Fetch CSRF token
   const fetchCsrfToken = async () => {
     try {
-      const response = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const response = await axios.get(`${BASE_URL}/csrf-token`);
       const token = response.data.csrf_token;
       setCsrfToken(token);
     } catch (error) {
@@ -57,7 +57,7 @@ const BidPage = () => {
 
       // Fetch vehicle details\
       console.log('Vehicle ID:', vehicleId);
-      const response = await axios.get(`http://192.168.18.225:8000/vehicleBids`,
+      const response = await axios.get(`${BASE_URL}/vehicleBids`,
         {
           params: {
             user_id: user.user_id, // Pass user_id and vehicle_id as query parameters
@@ -98,7 +98,7 @@ const BidPage = () => {
       const user = JSON.parse(userString);
 
       const response = await axios.post(
-        'http://192.168.18.225:8000/bids',
+        `${BASE_URL}/bids`,
         {
           vehicle_id: vehicle.vehicle_id,
           user_id: user.user_id,

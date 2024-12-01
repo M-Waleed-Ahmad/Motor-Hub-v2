@@ -15,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { BASE_URL } from '../../../utils/config';
 const CreateListing = () => {
   const router = useRouter();
   const [isForSale, setIsForSale] = useState(true); // Toggle between Sale and Rent
@@ -110,14 +110,14 @@ const CreateListing = () => {
   
     try {
       // Fetch CSRF token
-      const csrfResponse = await fetch('http://192.168.18.225:8000/csrf-token', {
+      const csrfResponse = await fetch(`${BASE_URL}/csrf-token`, {
         credentials: 'include', // Include cookies for Laravel Sanctum
       });
       const csrfData = await csrfResponse.json();
       const csrfToken = csrfData.csrf_token;
   
       // Send form data to the backend
-      const response = await fetch('http://192.168.18.225:8000/vehicle-register', {
+      const response = await fetch(`${BASE_URL}/vehicle-register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',

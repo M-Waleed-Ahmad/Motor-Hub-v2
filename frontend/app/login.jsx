@@ -17,21 +17,21 @@ import axios from 'axios';
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();  
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Login Failed', 'Email and password are required');
       return;
     }
-  
+
     try {
       // Step 1: Fetch CSRF Token
       console.log('Fetching CSRF Token...');
       const csrfResponse = await axios.get('http://192.168.100.4:8000/csrf-token');
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
-  
+
       // Step 2: Make POST request with CSRF token
       const response = await axios.post(
         'http://192.168.100.4:8000/login', // Assuming this is the login endpoint
@@ -47,17 +47,20 @@ const LoginScreen = () => {
           },
         }
       );
+
       if (response.status === 200) {
         const { token, user } = response.data;
-  
+
         // Step 3: Store the token in AsyncStorage
         await AsyncStorage.setItem('userToken', token);
         if (user.user_type === 'admin') {
           await AsyncStorage.setItem('admin', JSON.stringify(user)); // Store user as a string
+        } else {
+          await AsyncStorage.setItem('user', JSON.stringify(user)); // Store user as a string
         }
-        else
-        await AsyncStorage.setItem('user', JSON.stringify(user)); // Store user as a string
+
         console.log('Login successful:', user);
+
         // Step 4: Navigate based on user type
         if (user.user_type === 'admin') {
           router.replace('/homeAdmin');
@@ -120,13 +123,11 @@ const LoginScreen = () => {
             <Link href="/signup" style={styles.link}>
               Sign Up
             </Link>
-            {/* <Text style={styles.link}>SIGN UP</Text> */}
           </Text>
           <TouchableOpacity>
             <Link href="/forgotPassword" style={styles.forgotText}>
               Forgot Password?
             </Link>
-            {/* <Text style={styles.forgotText}>FORGOT PASSWORD?</Text> */}
           </TouchableOpacity>
         </View>
       </View>

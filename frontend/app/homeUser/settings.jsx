@@ -1,18 +1,22 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import BottomNav from '../../components/bottomNav'; // Import BottomNav component
+import { BASE_URL } from '../../utils/config'; // Import the base URL
 
 const SettingsScreen = () => {
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const settingsOptions = [
     { label: 'Location', icon: 'map-marker' },
     { label: 'Payment Method', icon: 'credit-card' },
@@ -22,21 +26,20 @@ const SettingsScreen = () => {
     { label: 'Help and Support', icon: 'headphones' },
     { label: 'Rules of Service', icon: 'book' },
   ];
+
   const router = useRouter();
+
   const handleLogout = async () => {
-    const router = useRouter();
-  
     try {
-      // Step 1: Make a POST request to the logout endpoint
       console.log('Logging out...');
-      const response = await axios.post('http://192.168.18.225:8000/logout');
-  
+      const response = await axios.post(`${BASE_URL}/logout`);
+
       console.log('Logout Response:', response.data);
-  
-      // Step 2: Clear the user token from AsyncStorage
+
+      // Clear user token from AsyncStorage
       await AsyncStorage.removeItem('userToken');
-  
-      // Step 3: Navigate to the login page
+
+      // Navigate to login page
       router.replace('/login');
       Alert.alert('Logout Successful', 'You have been logged out.');
     } catch (error) {
@@ -47,6 +50,26 @@ const SettingsScreen = () => {
       );
     }
   };
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+      const user = JSON.parse(userString);
+
+      if (user && user.unread_notifications_count !== undefined) {
+        setUnreadNotifications(user.unread_notifications_count);
+      } else {
+        console.error('Unread notifications count not found in user object.');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadNotifications();
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -64,7 +87,7 @@ const SettingsScreen = () => {
         {settingsOptions.map((option, index) => (
           <TouchableOpacity key={index} style={styles.settingsItem}>
             <FontAwesome
-              Name={option.icon}
+              name={option.icon}
               size={20}
               color="#aaa"
               style={styles.settingsIcon}
@@ -80,34 +103,8 @@ const SettingsScreen = () => {
         ))}
       </ScrollView>
 
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Link href="/homeUser/profile">
-          <FontAwesome name="user" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/listings/carListings">
-          <FontAwesome name="car" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/home">
-          <FontAwesome name="home" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/notifications">
-          <FontAwesome name="bell" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity >
-          <Link href="homeUser/settings" style={styles.forgotText}>
-          <FontAwesome name="cog" size={30} color="#00b4d8" />
-          </Link>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation */}
+      <BottomNav unreadNotifications={unreadNotifications} />
     </View>
   );
 };
@@ -118,7 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000', // Black background
   },
   header: {
-    marginTop:6,
+    marginTop: 6,
     backgroundColor: '#121212',
     padding: 24,
     alignItems: 'center',
@@ -160,13 +157,6 @@ const styles = StyleSheet.create({
   },
   chevronIcon: {
     marginLeft: 10,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#121212',
-    paddingVertical: 10,
   },
 });
 

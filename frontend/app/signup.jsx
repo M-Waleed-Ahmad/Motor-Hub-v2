@@ -8,8 +8,10 @@ import {
   StyleSheet,
   Alert,
   ImageBackground,
+  ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
+import { BASE_URL } from '../utils/config'; // Import the base URL
 
 const SignUpScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -18,25 +20,108 @@ const SignUpScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // const handleSignUp = async () => {
+  //   if (!firstName || !lastName || !email || !password || !confirmPassword || !contactNumber) {
+  //     Alert.alert('Sign Up Failed', 'All fields are required');
+  //     return;
+  //   }
+  //   if (password !== confirmPassword) {
+  //     Alert.alert('Sign Up Failed', 'Passwords do not match');
+  //     return;
+  //   }
+  
+  //   try {
+  //     // Step 1: Fetch CSRF Token
+  //     console.log('Fetching CSRF Token...');
+  //     const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
+  //     const csrfToken = csrfResponse.data.csrf_token;
+  //     console.log('CSRF Token:', csrfToken);
+  //     // Step 2: Make POST request with CSRF token
+  //     const response = await axios.post(
+  //       'http://192.168.18.193:8000/register', // Assuming this is the register endpoint
+  //       {
+  //         full_name: `${firstName} ${lastName}`,
+  //         email,
+  //         password,
+  //         password_confirmation: confirmPassword,
+  //         phone_number: contactNumber,
+  //       },
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+  //           'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+  //         },
+  //       }
+  //     );
+  
+  //     console.log('Sign Up Response:', response);
+  
+  //     if (response.status === 201) {
+  //       Alert.alert('Sign Up Successful', 'Welcome to Motor Hub!');
+  //     }
+  //   } catch (error) {
+  //     console.error('Sign Up Error:', error.response?.data || error);
+  //     Alert.alert(
+  //       'Sign Up Failed',
+  //       error.response?.data?.message || 'Something went wrong. Please try again.'
+  //     );
+  //   }
+  // };
+  
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword || !contactNumber) {
       Alert.alert('Sign Up Failed', 'All fields are required');
       return;
     }
+  
+    // Check if phone number length is exactly 11 digits
+    const phoneNumberRegex = /^\d{11}$/; // Regex to ensure exactly 11 digits
+    if (!phoneNumberRegex.test(contactNumber)) {
+      Alert.alert('Sign Up Failed', 'Phone number must be exactly 11 digits');
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(email)) {
+      Alert.alert('Sign Up Failed', 'Please enter a valid email address');
+      return;
+    }
+
+  
+
+    if (!validateEmail(email)) {
+      Alert.alert('Sign Up Failed', 'Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Sign Up Failed', 'Password must be at least 6 characters long');
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert('Sign Up Failed', 'Passwords do not match');
       return;
     }
-  
+
     try {
-      // Step 1: Fetch CSRF Token
+      setLoading(true);
       console.log('Fetching CSRF Token...');
       const csrfResponse = await axios.get('http://192.168.100.4:8000/csrf-token');
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
       console.log('CSRF Token:', csrfToken);
       // Step 2: Make POST request with CSRF token
+
       const response = await axios.post(
         'http://192.168.100.4:8000/register', // Assuming this is the register endpoint
         {
@@ -44,21 +129,30 @@ const SignUpScreen = () => {
           email,
           password,
           password_confirmation: confirmPassword,
-          contact_number: contactNumber,
+          phone_number: contactNumber,
+          phone_number: contactNumber,
         },
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
-            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
           },
         }
       );
-  
+
       console.log('Sign Up Response:', response);
-  
+
       if (response.status === 201) {
         Alert.alert('Sign Up Successful', 'Welcome to Motor Hub!');
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setContactNumber('');
       }
     } catch (error) {
       console.error('Sign Up Error:', error.response?.data || error);
@@ -67,22 +161,21 @@ const SignUpScreen = () => {
         'Sign Up Failed',
         error.response?.data?.message || 'Something went wrong. Please try again.'
       );
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <ImageBackground
-      source={require('../assets/images/login.png')} // Adjust the path as per your project structure
+      source={require('../assets/images/login.png')}
       style={styles.background}
     >
       <View style={styles.container}>
-        {/* Title Section */}
         <Text style={styles.title}>
           MOTOR <Text style={styles.highlight}>HUB</Text>
         </Text>
 
-        {/* Input Fields */}
         <TextInput
           style={styles.input}
           placeholder="First Name"
@@ -130,12 +223,18 @@ const SignUpScreen = () => {
           keyboardType="phone-pad"
         />
 
-        {/* Sign Up Button */}
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <Text style={styles.signUpText}>SIGN UP</Text>
+        <TouchableOpacity
+          style={styles.signUpButton}
+          onPress={handleSignUp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.signUpText}>SIGN UP</Text>
+          )}
         </TouchableOpacity>
 
-        {/* Footer Section */}
         <View style={styles.footer}>
           <Text style={styles.loginText}>
             Already have an account?{' '}
@@ -159,7 +258,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Dark overlay for better visibility
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   title: {
     fontSize: 32,
@@ -168,12 +267,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   highlight: {
-    color: '#00BFFF', // Blue highlight for "HUB"
+    color: '#00BFFF',
   },
   input: {
     width: '80%',
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent background
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 20,
@@ -194,7 +293,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   footer: {
-    position: 'absolute', // Place footer at the bottom
+    position: 'absolute',
     bottom: 30,
     alignItems: 'center',
     width: '100%',

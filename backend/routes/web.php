@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BidController;
 use App\Http\Controllers\FavouritesController;
@@ -69,3 +70,10 @@ Route::get('/', function () {
 });
 
 
+
+
+Route::get('/notifications', [NotificationsController::class, 'index']);
+Route::post('/notifications/mark-as-read', [NotificationsController::class, 'markAsRead']);
+Route::post('/notifications/mark-all-as-read', [NotificationsController::class, 'markAllAsRead']);
+Route::post('/notifications/remove', [NotificationsController::class, 'clearNotification']);
+Route::post('/notifications/clear-all', [NotificationsController::class, 'clearAll']);

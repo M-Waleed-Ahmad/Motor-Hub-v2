@@ -13,7 +13,7 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-
+import { BASE_URL } from '../../../utils/config';
 export default function ApproveUsers() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
@@ -25,7 +25,7 @@ export default function ApproveUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://192.168.18.225:8000/admin/users');
+        const response = await fetch(`${BASE_URL}/admin/users`);
         const data = await response.json();
         console.log('Users:', data);
         const unapprovedUsers = data.filter((user) => user.is_approved === '0');
@@ -59,14 +59,14 @@ export default function ApproveUsers() {
   const handleApprove = async (id) => {
     try {
       // Step 1: Fetch CSRF Token
-      const csrfResponse = await fetch('http://192.168.18.225:8000/csrf-token', {
+      const csrfResponse = await fetch(`${BASE_URL}/csrf-token`, {
         credentials: 'include', // Send cookies with the request
       });
       const { csrf_token } = await csrfResponse.json(); // Ensure the response includes `csrf_token`
   
       // Step 2: Approve User
       const response = await axios.post(
-        `http://192.168.18.225:8000/admin/users/approve/${id}`,
+        `${BASE_URL}/admin/users/approve/${id}`,
         {}, // No body needed
         {
           headers: {

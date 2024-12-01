@@ -16,7 +16,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-
+import { BASE_URL } from '../../utils/config';
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('Buy a Vehicle');
   const [vehicles, setVehicles] = useState([]);
@@ -44,7 +44,7 @@ export default function ProductListingsPage() {
       const user = JSON.parse(userString);
       const user_id = user.user_id;
 
-      const response = await fetch(`http://192.168.18.225:8000/vehicles?user_id=${user_id}`);
+      const response = await fetch(`${BASE_URL}/vehicles?user_id=${user_id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch vehicles');
       }

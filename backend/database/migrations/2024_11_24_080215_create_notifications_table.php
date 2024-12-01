@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('notification_id');
             $table->foreignId('user_id')->constrained('users','user_id');
             $table->text('message');
-            $table->enum('notification_type', ['new_listing', 'bid_update', 'payment', 'rental_update']);
+            $table->enum('notification_type', ['new_listing', 'bid_update', 'payment', 'rental_update','general']);
             $table->boolean('is_read')->default(false);
             $table->timestamps();
         });

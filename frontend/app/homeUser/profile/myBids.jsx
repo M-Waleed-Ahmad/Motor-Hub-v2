@@ -4,7 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { BASE_URL } from '../../../utils/config';
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('My Listings');
   const [products, setProducts] = useState([]);
@@ -25,8 +25,8 @@ export default function ProductListingsPage() {
       const user = JSON.parse(userString);
       const endpoint =
         activeTab === 'My Listings'
-          ? `http://192.168.18.225:8000/myListings?user_id=${user.user_id}`
-          : `http://192.168.18.225:8000/bidsMade?user_id=${user.user_id}`;
+          ? `${BASE_URL}/myListings?user_id=${user.user_id}`
+          : `${BASE_URL}/bidsMade?user_id=${user.user_id}`;
 
       const response = await axios.get(endpoint);
 

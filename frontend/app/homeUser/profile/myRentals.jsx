@@ -11,7 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-
+import { BASE_URL } from '../../../utils/config';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter, Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -35,7 +35,7 @@ export default function ProductListingsPage() {
       const user = JSON.parse(userString);
       const userId = user.user_id;
 
-      const response = await fetch(`http://192.168.18.225:8000/rentals?user_id=${userId}`);
+      const response = await fetch(`${BASE_URL}/rentals?user_id=${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch vehicles');
       }
