@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, Dimensions } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 
+const { width } = Dimensions.get('window');
+const buttonSize = (width / 2) - 30; // Adjusting size dynamically
+
 export default function ProfilePage() {
   const router = useRouter();
 
-  // State for user information
   const [userInfo, setUserInfo] = useState({
     name: 'Suneel Munj Lite',
     phone: 'XXXX-XXXXXXX',
@@ -16,26 +18,20 @@ export default function ProfilePage() {
     cnic: 'XXXXX-XXXXXXX-X',
   });
 
-  // State for profile image
   const [profileImage, setProfileImage] = useState(null);
-
-  // State to track editing mode
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
 
-  // Function to start editing a field
   const startEditing = (field, value) => {
     setEditingField(field);
     setTempValue(value);
   };
 
-  // Function to save changes
   const saveChanges = () => {
     setUserInfo((prev) => ({ ...prev, [editingField]: tempValue }));
     setEditingField(null);
   };
 
-  // Function to pick an image
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -51,9 +47,7 @@ export default function ProfilePage() {
 
   return (
     <View style={styles.container}>
-      {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header */}
         <View style={styles.profileHeader}>
           <TouchableOpacity onPress={pickImage}>
             {profileImage ? (
@@ -65,7 +59,6 @@ export default function ProfilePage() {
           <Text style={styles.username}>Profile</Text>
         </View>
 
-        {/* User Info Section */}
         <View style={styles.infoCard}>
           {Object.keys(userInfo).map((field) => (
             <View key={field} style={styles.infoRow}>
@@ -93,28 +86,22 @@ export default function ProfilePage() {
           ))}
         </View>
 
-        {/* Navigation Buttons */}
         <View style={styles.buttonGrid}>
-          <View>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myRentals')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Rentals</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myFavs')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Favourites</Text>
-            </TouchableOpacity>
-          </View>
-          <View>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myListings')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Listings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myBids')} style={styles.navButton}>
-              <Text style={styles.buttonText}>My Bids</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myRentals')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Rentals</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myFavs')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Favourites</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myListings')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Listings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/homeUser/profile/myBids')} style={styles.navButton}>
+            <Text style={styles.buttonText}>My Bids</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity>
           <Link href="/homeUser/profile">
@@ -149,7 +136,7 @@ export default function ProfilePage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#000',
   },
   scrollContent: {
     flexGrow: 1,
@@ -206,16 +193,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    width: '50%',
+    paddingHorizontal: 10,
   },
   navButton: {
     backgroundColor: '#1E1E1E',
     borderRadius: 10,
-    paddingVertical: 40,
+    width: buttonSize,
+    height: buttonSize,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
-    marginBottom: 25,
-    width: '100%',
+    marginBottom: 15,
   },
   buttonText: {
     color: '#fff',

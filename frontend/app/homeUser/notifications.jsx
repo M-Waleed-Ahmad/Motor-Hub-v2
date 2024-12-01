@@ -70,13 +70,13 @@ export default function NotificationsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#000',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: 30,
     backgroundColor: '#1E1E1E',
   },
   headerText: {

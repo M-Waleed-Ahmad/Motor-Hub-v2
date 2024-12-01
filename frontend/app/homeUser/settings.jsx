@@ -8,6 +8,9 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const SettingsScreen = () => {
   const settingsOptions = [
@@ -19,7 +22,31 @@ const SettingsScreen = () => {
     { label: 'Help and Support', icon: 'headphones' },
     { label: 'Rules of Service', icon: 'book' },
   ];
-
+  const router = useRouter();
+  const handleLogout = async () => {
+    const router = useRouter();
+  
+    try {
+      // Step 1: Make a POST request to the logout endpoint
+      console.log('Logging out...');
+      const response = await axios.post('http://192.168.18.225:8000/logout');
+  
+      console.log('Logout Response:', response.data);
+  
+      // Step 2: Clear the user token from AsyncStorage
+      await AsyncStorage.removeItem('userToken');
+  
+      // Step 3: Navigate to the login page
+      router.replace('/login');
+      Alert.alert('Logout Successful', 'You have been logged out.');
+    } catch (error) {
+      console.error('Logout Error:', error.response?.data || error);
+      Alert.alert(
+        'Logout Failed',
+        error.response?.data?.message || 'Something went wrong. Please try again.'
+      );
+    }
+  };
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -28,7 +55,7 @@ const SettingsScreen = () => {
       </View>
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
 

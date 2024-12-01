@@ -194,7 +194,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: '#121212',
-    paddingVertical: 1,
+    paddingVertical: 10,
+    height: 47, 
+    position: 'absolute', 
+    bottom: 0, 
+    width: '100%',
+    
   },
 });
 

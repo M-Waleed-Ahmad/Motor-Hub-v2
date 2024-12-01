@@ -110,13 +110,13 @@ export default function ProductListingsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#000',
   },
   tabs: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#1E1E1E',
-    paddingVertical: 10,
+    paddingVertical: 30,
   },
   tab: {
     padding: 10,
@@ -187,5 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#121212',
     paddingVertical: 10,
+    
+    
   },
 });

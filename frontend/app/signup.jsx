@@ -31,12 +31,13 @@ const SignUpScreen = () => {
   
     try {
       // Step 1: Fetch CSRF Token
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get('http://192.168.100.4:8000/csrf-token');
       const csrfToken = csrfResponse.data.csrf_token;
-  
+      console.log('CSRF Token:', csrfToken);
       // Step 2: Make POST request with CSRF token
       const response = await axios.post(
-        'http://192.168.18.225:8000/register', // Assuming this is the register endpoint
+        'http://192.168.100.4:8000/register', // Assuming this is the register endpoint
         {
           full_name: `${firstName} ${lastName}`,
           email,
@@ -59,7 +60,7 @@ const SignUpScreen = () => {
         Alert.alert('Sign Up Successful', 'Welcome to Motor Hub!');
       }
     } catch (error) {
-      console.error('Sign Up Error:', error.response?.data || error.message);
+      console.error('Sign Up Error:', error.response?.data || error);
       Alert.alert(
         'Sign Up Failed',
         error.response?.data?.message || 'Something went wrong. Please try again.'

@@ -10,25 +10,73 @@ import {
   Alert,
   ImageBackground,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();  
 
-  const handleLogin = () => {
-    console.log('Email:', email);
-    console.log('Password', password);  
-    if (email == '' && password == '') {
-      // Alert.alert('Login Successful');
-      router.replace("/homeUser"); 
-      console.log('Login Successful');
-    } else {
-      router.replace('/homeAdmin');
-      // Alert.alert('Login Failed', 'Invalid email or password');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Login Failed', 'Email and password are required');
+      return;
+    }
+  
+    try {
+      // Step 1: Fetch CSRF Token
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get('http://192.168.100.4:8000/csrf-token');
+      const csrfToken = csrfResponse.data.csrf_token;
+      console.log('CSRF Token:', csrfToken);
+  
+      // Step 2: Make POST request with CSRF token
+      const response = await axios.post(
+        'http://192.168.100.4:8000/login', // Assuming this is the login endpoint
+        {
+          email,
+          password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+          },
+        }
+      );
+  
+      console.log('Login Response:', response);
+  
+      if (response.status === 200) {
+        const { token, user } = response.data;
+  
+        // Step 3: Store the token in AsyncStorage
+        await AsyncStorage.setItem('userToken', token);
+  
+        // Step 4: Navigate based on user type
+        if (user.user_type === 'admin') {
+          router.replace('/homeAdmin');
+          console.log('Admin login successful');
+        } else if (user.user_type === 'user') {
+          router.replace('/homeUser');
+          console.log('User login successful');
+        } else {
+          console.error('Unknown user type');
+          Alert.alert('Error', 'Unknown user type.');
+        }
+      } else {
+        Alert.alert('Login Failed', 'Invalid email or password');
+      }
+    } catch (error) {
+      console.error('Login Error:', error.response?.data || error);
+      Alert.alert(
+        'Login Failed',
+        error.response?.data?.message || 'Something went wrong. Please try again.'
+      );
     }
   };
-
+  
   return (
     <ImageBackground
       source={require('../assets/images/login.png')}
