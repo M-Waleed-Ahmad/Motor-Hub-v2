@@ -13,8 +13,14 @@ class Vehicle extends Model
     protected $fillable = [
         'user_id',
         'title',
-        'description',
+        'name',
         'make',
+        'bid',
+        'location',
+        'registeredIn',
+        'color',
+        'condition',
+        'vehicle_type',
         'model',
         'year',
         'price',
@@ -29,7 +35,7 @@ class Vehicle extends Model
 
     public function images()
     {
-        return $this->hasMany(VehicleImage::class, 'vehicle_id');
+        return $this->hasMany(VehicleImage::class, 'vehicle_id', 'vehicle_id');
     }
 
     public function bids()

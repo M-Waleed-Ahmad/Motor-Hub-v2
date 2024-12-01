@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
+import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CreateListing = () => {
   const router = useRouter();
@@ -20,57 +23,125 @@ const CreateListing = () => {
   const [vehicleModel, setVehicleModel] = useState('');
   const [registeredIn, setRegisteredIn] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
+  const [selectedVehicleType, setSelectedVehicleType] = useState('sedans'); // Default vehicle type
   const [isAuction, setIsAuction] = useState(false);
   const [price, setPrice] = useState('');
   const [image, setImage] = useState(null);
 
-
-  // Sample Color Palette (can be extended or replaced with library)
-  const colors = [
-    'Red', 'Green', 'Blue', 'Black', 'White', 
-    'Yellow', 'Pink', 'Orange', 'Purple', 'Brown', 'Gray',
+  // Vehicle types from the database
+  const vehicleTypes = [
+    'sedans',
+    'suvs',
+    'trucks',
+    'bikes',
+    'e-cars',
+    'sports',
+    'new',
+    'used',
   ];
 
-const handleImageUpload = async () => {
-  // Request media library permissions
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const colors = [
+    'Red',
+    'Green',
+    'Blue',
+    'Black',
+    'White',
+    'Yellow',
+    'Pink',
+    'Orange',
+    'Purple',
+    'Brown',
+    'Gray',
+  ];
 
-  if (status !== 'granted') {
-    alert('Sorry, we need camera roll permissions to make this work!');
-    return;
-  }
-
-  // Launch the image picker
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images, // Only images
-    allowsEditing: true, // Allow user to crop the image
-    quality: 1, // Maximum quality
-  });
-
-  if (!result.canceled) {
-    setImage(result.assets[0].uri); // Save the selected image URI to state
-  }
-};
-const handleSubmit = () => {
-    // Create an object to store all the user-provided data
-    const listingData = {
-      isForSale,
-      location,
-      vehicleModel,
-      registeredIn,
-      selectedColor,
-      isAuction,
-      price: isAuction ? null : price, // Nullify price if auction is enabled
-      image, // The image URI
-    };
-  
-    // Serialize the object into a query string
-    const queryString = new URLSearchParams(listingData).toString();
-  
-    // Navigate to the next page with query parameters
-    router.push(`homeUser/listings/listingCreated/${queryString}`);
+  const handleImageUpload = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
   };
 
+  const handleSubmit = async () => {
+    if (!image) {
+      alert('Please select an image.');
+      return;
+    }
+  
+    const ListingData = new FormData();
+    const userString= await AsyncStorage.getItem('user');
+    let userId;
+    if (userString) {
+      const user = JSON.parse(userString); // Parse the string to get the user object
+      userId = user.user_id; // Access the user_id from the user object
+      console.log(userId); // Now you have the user_id
+    } else {
+      console.log("No user data found.");
+    }
+    // Append required fields
+    ListingData.append('name', vehicleModel); // Match Laravel's field name
+    ListingData.append('location', location || 'Unknown');
+    ListingData.append('registeredIn', registeredIn || 'Unknown');
+    ListingData.append('color', selectedColor || 'Unknown');
+    ListingData.append('vehicle_type', selectedVehicleType);
+    ListingData.append('bid', isAuction ? 'yes' : 'no');
+    ListingData.append('listing_type', isForSale ? 'sale' : 'rent');
+    ListingData.append('condition', 5); // Assuming a default value of 5
+    ListingData.append('availability_status', 'available'); // Default status
+    ListingData.append('price', isAuction ? 0 : price);
+    ListingData.append('model', vehicleModel); // Assuming user ID is stored in AsyncStorage
+    ListingData.append('user', userId); // Assuming user ID is stored in AsyncStorage
+    // Attach the image
+    const filename = image.split('/').pop();
+    const fileType = filename.split('.').pop(); // e.g., jpg, png
+    ListingData.append('image', {
+      uri: image,
+      name: filename,
+      type: `image/${fileType}`,
+    });
+  
+    try {
+      // Fetch CSRF token
+      const csrfResponse = await fetch('http://192.168.18.225:8000/csrf-token', {
+        credentials: 'include', // Include cookies for Laravel Sanctum
+      });
+      const csrfData = await csrfResponse.json();
+      const csrfToken = csrfData.csrf_token;
+  
+      // Send form data to the backend
+      const response = await fetch('http://192.168.18.225:8000/vehicle-register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: ListingData,
+      });
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert('Listing created successfully!');
+        console.log('Listing created:', result.data.vehicle.vehicle_id);
+        const vehicle_id=result.data.vehicle.vehicle_id;
+        router.push(`/homeUser/listings/listingCreated/${vehicle_id}`); // Navigate back to the home screen
+      } else {
+        console.error('Error:', result);
+        alert('Failed to create listing. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Something went wrong. Please try again later.');
+    }
+  };
+  
   const renderColorItem = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -84,7 +155,6 @@ const handleSubmit = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header Section */}
       <View style={styles.header}>
         <TouchableOpacity>
           <Text style={styles.backArrow}>←</Text>
@@ -107,7 +177,6 @@ const handleSubmit = () => {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-        {/* Image Upload Section */}
         <TouchableOpacity style={styles.imageUpload} onPress={handleImageUpload}>
           <Image
             source={
@@ -117,13 +186,10 @@ const handleSubmit = () => {
             }
             style={styles.uploadedImage}
           />
-          {!image && (
-            <Text style={styles.imageUploadText}>Tap to upload an image</Text>
-          )}
+          {!image && <Text style={styles.imageUploadText}>Tap to upload an image</Text>}
           <Text style={styles.supportText}>Supported Formats: JPG, JPEG, PNG</Text>
         </TouchableOpacity>
 
-        {/* Location Section */}
         <TouchableOpacity style={styles.field}>
           <Text style={styles.fieldText}>Location</Text>
           <TextInput
@@ -135,7 +201,6 @@ const handleSubmit = () => {
           />
         </TouchableOpacity>
 
-        {/* Vehicle Model Section */}
         <TouchableOpacity style={styles.field}>
           <Text style={styles.fieldText}>Vehicle Model</Text>
           <TextInput
@@ -147,7 +212,6 @@ const handleSubmit = () => {
           />
         </TouchableOpacity>
 
-        {/* Registered In Section */}
         <TouchableOpacity style={styles.field}>
           <Text style={styles.fieldText}>Registered In</Text>
           <TextInput
@@ -159,7 +223,19 @@ const handleSubmit = () => {
           />
         </TouchableOpacity>
 
-        {/* Color Section */}
+        <View style={styles.field}>
+          <Text style={styles.fieldText}>Vehicle Type</Text>
+          <Picker
+            selectedValue={selectedVehicleType}
+            onValueChange={(itemValue) => setSelectedVehicleType(itemValue)}
+            style={styles.picker}
+          >
+            {vehicleTypes.map((type) => (
+              <Picker.Item label={type} value={type} key={type} />
+            ))}
+          </Picker>
+        </View>
+
         <View style={styles.field}>
           <Text style={styles.fieldText}>Color</Text>
           <FlatList
@@ -172,7 +248,6 @@ const handleSubmit = () => {
           />
         </View>
 
-        {/* Auction Section */}
         <View style={[styles.field, styles.auctionSection]}>
           <Text style={styles.fieldText}>Enable Auction?</Text>
           <Switch
@@ -183,7 +258,6 @@ const handleSubmit = () => {
           />
         </View>
 
-        {/* Price Section */}
         <TouchableOpacity style={styles.field}>
           <Text style={styles.fieldText}>Price</Text>
           <TextInput
@@ -203,13 +277,13 @@ const handleSubmit = () => {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Submit Button */}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Submit Listing</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -328,6 +402,11 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#fff',
     fontSize: 18,
+  },
+  picker: {
+    backgroundColor: '#2c2c2c',
+    color: '#fff',
+    borderRadius: 8,
   },
 });
 
