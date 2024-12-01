@@ -116,7 +116,6 @@ const SignUpScreen = () => {
     try {
       setLoading(true);
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
       const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
@@ -124,7 +123,6 @@ const SignUpScreen = () => {
       // Step 2: Make POST request with CSRF token
 
       const response = await axios.post(
-        'http://192.168.18.193:8000/register',
         `${BASE_URL}/register`,
         {
           full_name: `${firstName} ${lastName}`,
