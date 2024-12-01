@@ -89,7 +89,14 @@ class BidController extends Controller
             ];
     
             Log::info('Vehicle details prepared', ['response' => $response]);
-    
+
+            $notification = \App\Models\Notification::create([
+                'user_id' => $user_id,
+                'message' => 'Bid details for ' . $vehicle->model . 'added successfully.',
+                'notification_type' => 'bid_update',
+                'is_read' => false,
+            ]);
+
             return response()->json($response);
         } catch (\Exception $e) {
             // Log unexpected errors
