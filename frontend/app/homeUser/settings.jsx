@@ -160,7 +160,21 @@ const SettingsScreen = () => {
   const handleLogout = async () => {
     try {
       console.log('Logging out...');
-      const response = await axios.post(`${BASE_URL}/logout`);
+      console.log('Fetching CSRF Token...');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
+      const csrfToken = csrfResponse.data.csrf_token;
+      console.log('CSRF Token:', csrfToken);
+      const response = await axios.post(`${BASE_URL}/logout`,
+        {}
+        ,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+          },
+        }
+      );
 
       console.log('Logout Response:', response.data);
 
