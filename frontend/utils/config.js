@@ -1,2 +1,4 @@
 // utils/config.js
-export const BASE_URL = 'http://172.20.10.10:8000';
+export const BASE_URL = 'http://192.168.181.136:8000';
+
+// 192.168.181.136
