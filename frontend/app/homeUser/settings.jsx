@@ -122,7 +122,16 @@ const SettingsScreen = () => {
         </View>
       ),
     },
-    { label: 'Security', icon: 'lock', content: 'Adjust security settings.' },
+    { label: 'Security', 
+      icon: 'lock',
+      content: (
+        <View style={styles.aboutContainer}>
+          <Text style={styles.aboutText}>
+            END TO END ENCRYPTED
+          </Text>
+        </View>
+      )
+    },
     {
       label: 'About',
       icon: 'info-circle',
