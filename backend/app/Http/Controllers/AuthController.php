@@ -113,75 +113,47 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function resetPassword(Request $request)
-    {
-        // Validate the email input
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email|max:100',
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // Check if the user exists
-        $user = User::where('email', $request->email)->first();
-        if (!$user) {
-            return response()->json(['error' => 'User not found with this email address.'], 404);
-        }
-
-        // Generate a reset token (could be stored in a table, for simplicity we use a random string)
-        $resetToken = bin2hex(random_bytes(40));
-
-        // Store the reset token (you can create a `password_resets` table for this)
-        // For now, assuming we add a column in the User table `password_reset_token`
-        $user->password_reset_token = $resetToken;
-        $user->save();
-
-        // Send password reset email with the reset link
-        // You would create a `PasswordResetMail` class to handle this
-        Mail::to($user->email)->send(new PasswordResetMail($resetToken));
-
-        Log::info('Password reset requested', ['user_id' => $user->user_id]);
-
-        return response()->json([
-            'message' => 'Password reset link has been sent to your email.',
-        ], 200);
-    }
-
-    public function updatePassword(Request $request)
+    public function changePassword(Request $request)
     {
         // Validate the request
-        $validator = Validator::make($request->all(), [
+        $validatedData = $request->validate([
             'email' => 'required|string|email|max:100',
-            'password_reset_token' => 'required|string|max:80',
-            'new_password' => 'required|string|min:6',
+            'password' => 'required|string|min:8', // Enforce a stronger password policy
         ]);
-        
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+    
+        try {
+            // Find the user by email
+            $user = User::where('email', $validatedData['email'])->first();
+    
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+    
+            // Hash and update the user's password
+            $user->password_hash = ($validatedData['password']);
+            $user->save();
+    
+            // Log the password change
+            Log::info('User password changed successfully.', ['email' => $user->email]);
+    
+            // Return a success response
+            return response()->json([
+                'message' => 'Password changed successfully.',
+            ], 200);
+        } catch (\Exception $e) {
+            // Log the exception
+            Log::error('Error changing password', [
+                'email' => $request->email,
+                'error_message' => $e->getMessage(),
+            ]);
+    
+            // Return a generic error response
+            return response()->json([
+                'error' => 'An error occurred while changing the password. Please try again.',
+            ], 500);
         }
-
-        // Find the user by email
-        $user = User::where('email', $request->email)
-            ->where('password_reset_token', $request->password_reset_token)
-            ->first();
-
-        if (!$user) {
-            return response()->json(['error' => 'Invalid reset token.'], 400);
-        }
-
-        // Update the user's password
-        $user->password_hash = $request->new_password;
-        $user->password_reset_token = null; // Clear the reset token
-        $user->save();
-
-        Log::info('Password updated successfully', ['user_id' => $user->user_id]);
-
-        return response()->json([
-            'message' => 'Password has been successfully updated.',
-        ], 200);
     }
+    
     
     /**
      * Display a listing of the resource.

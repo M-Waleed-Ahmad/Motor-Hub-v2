@@ -14,6 +14,7 @@ use App\Http\Controllers\FavouritesController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/forgot-password', [AuthController::class, 'changePassword']);
 
 // User Routes
 Route::post('/updateProfile', [UserController::class, 'updateProfile']);
