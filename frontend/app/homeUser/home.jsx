@@ -20,8 +20,8 @@ const MotorHubScreen = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const bannerImages = [ 
     require('../../assets/images/banner1.jpg'), // Replace with your actual image paths
-    require('../../assets/images/banner1.jpg'), // Replace with your actual image paths
-    require('../../assets/images/banner1.jpg'), // Replace with your actual image paths
+    require('../../assets/images/banner2.jpg'), // Replace with your actual image paths
+    require('../../assets/images/banner3.jpg'), // Replace with your actual image paths
   ];
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
