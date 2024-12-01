@@ -19,11 +19,76 @@ const SignUpScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [contactNumber, setContactNumber] = useState('');
 
+  // const handleSignUp = async () => {
+  //   if (!firstName || !lastName || !email || !password || !confirmPassword || !contactNumber) {
+  //     Alert.alert('Sign Up Failed', 'All fields are required');
+  //     return;
+  //   }
+  //   if (password !== confirmPassword) {
+  //     Alert.alert('Sign Up Failed', 'Passwords do not match');
+  //     return;
+  //   }
+  
+  //   try {
+  //     // Step 1: Fetch CSRF Token
+  //     console.log('Fetching CSRF Token...');
+  //     const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
+  //     const csrfToken = csrfResponse.data.csrf_token;
+  //     console.log('CSRF Token:', csrfToken);
+  //     // Step 2: Make POST request with CSRF token
+  //     const response = await axios.post(
+  //       'http://192.168.18.193:8000/register', // Assuming this is the register endpoint
+  //       {
+  //         full_name: `${firstName} ${lastName}`,
+  //         email,
+  //         password,
+  //         password_confirmation: confirmPassword,
+  //         phone_number: contactNumber,
+  //       },
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
+  //           'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+  //         },
+  //       }
+  //     );
+  
+  //     console.log('Sign Up Response:', response);
+  
+  //     if (response.status === 201) {
+  //       Alert.alert('Sign Up Successful', 'Welcome to Motor Hub!');
+  //     }
+  //   } catch (error) {
+  //     console.error('Sign Up Error:', error.response?.data || error);
+  //     Alert.alert(
+  //       'Sign Up Failed',
+  //       error.response?.data?.message || 'Something went wrong. Please try again.'
+  //     );
+  //   }
+  // };
+  
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword || !contactNumber) {
       Alert.alert('Sign Up Failed', 'All fields are required');
       return;
     }
+  
+    // Check if phone number length is exactly 11 digits
+    const phoneNumberRegex = /^\d{11}$/; // Regex to ensure exactly 11 digits
+    if (!phoneNumberRegex.test(contactNumber)) {
+      Alert.alert('Sign Up Failed', 'Phone number must be exactly 11 digits');
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(email)) {
+      Alert.alert('Sign Up Failed', 'Please enter a valid email address');
+      return;
+    }
+
+  
     if (password !== confirmPassword) {
       Alert.alert('Sign Up Failed', 'Passwords do not match');
       return;
@@ -32,24 +97,25 @@ const SignUpScreen = () => {
     try {
       // Step 1: Fetch CSRF Token
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get('http://192.168.18.193:8000/csrf-token');
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
+  
       // Step 2: Make POST request with CSRF token
       const response = await axios.post(
-        'http://192.168.18.225:8000/register', // Assuming this is the register endpoint
+        'http://192.168.18.193:8000/register',
         {
           full_name: `${firstName} ${lastName}`,
           email,
           password,
           password_confirmation: confirmPassword,
-          contact_number: contactNumber,
+          phone_number: contactNumber,
         },
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
-            'X-Requested-With': 'XMLHttpRequest', // Laravel often expects this header
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
           },
         }
       );
