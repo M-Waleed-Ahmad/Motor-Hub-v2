@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use App\Models\Bid;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Log;
 
 
@@ -90,12 +91,7 @@ class BidController extends Controller
     
             Log::info('Vehicle details prepared', ['response' => $response]);
 
-            $notification = \App\Models\Notification::create([
-                'user_id' => $user_id,
-                'message' => 'Bid details for ' . $vehicle->model . 'added successfully.',
-                'notification_type' => 'bid_update',
-                'is_read' => false,
-            ]);
+         
 
             return response()->json($response);
         } catch (\Exception $e) {
@@ -117,97 +113,118 @@ class BidController extends Controller
      */
     
 
-    public function submitBid(Request $request)
-    {
-        $request->validate([
-            'vehicle_id' => 'required|exists:vehicles,vehicle_id',
-            'amount' => 'required|numeric|min:0.01',
-        ]);
-    
-        $vehicleId = $request->vehicle_id;
-        $amount = $request->amount;
-        $userId = $request->user_id;
-    
-        try {
-            Log::info('Received bid submission request', [
-                'vehicle_id' => $vehicleId,
-                'user_id' => $userId,
-                'amount' => $amount,
-            ]);
-    
-            $vehicle = Vehicle::find($vehicleId);
-            if (!$vehicle) {
-                Log::warning('Vehicle not found', ['vehicle_id' => $vehicleId]);
-                return response()->json(['error' => 'Vehicle not found'], 404);
-            }
-    
-            $highestBid = Bid::where('vehicle_id', $vehicleId)->max('bid_amount') ?? $vehicle->price;
-    
-            // Check if bid is higher than the highest bid
-            if ($amount <= $highestBid) {
-                Log::warning('Invalid bid amount', [
-                    'vehicle_id' => $vehicleId,
-                    'user_id' => $userId,
-                    'amount' => $amount,
-                    'highest_bid' => $highestBid,
-                ]);
-                return response()->json([
-                    'error' => 'Bid must be higher than the current highest bid of ' . $highestBid,
-                ], 422);
-            }
-    
-            // Check if the user has already placed a bid
-            $existingBid = Bid::where('vehicle_id', $vehicleId)->where('bidder_id', $userId)->first();
-            if ($existingBid) {
-                // Update the existing bid
-                $existingBid->update(['bid_amount' => $amount]);
-                Log::info('Bid updated successfully', [
-                    'vehicle_id' => $vehicleId,
-                    'user_id' => $userId,
-                    'bid_id' => $existingBid->bid_id,
-                    'amount' => $amount,
-                ]);
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Bid updated successfully',
-                    'bid' => $existingBid,
-                ]);
-            }
-    
-            // Save a new bid to the database
-            $bid = Bid::create([
-                'vehicle_id' => $vehicleId,
-                'bidder_id' => $userId,
-                'bid_amount' => $amount,
-                'bid_status' => 'active',
-            ]);
-    
-            Log::info('Bid placed successfully', [
-                'vehicle_id' => $vehicleId,
-                'user_id' => $userId,
-                'bid_id' => $bid->bid_id,
-                'amount' => $amount,
-            ]);
-    
-            return response()->json([
-                'success' => true,
-                'message' => 'Bid placed successfully',
-                'bid' => $bid,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error placing bid', [
-                'vehicle_id' => $vehicleId,
-                'user_id' => $userId,
-                'amount' => $amount,
-                'error_message' => $e->getMessage(),
-            ]);
-    
-            return response()->json([
-                'error' => 'An error occurred while placing the bid. Please try again later.',
-            ], 500);
-        }
-    }
-
+     public function submitBid(Request $request)
+     {
+         $request->validate([
+             'vehicle_id' => 'required|exists:vehicles,vehicle_id',
+             'amount' => 'required|numeric|min:0.01',
+             'user_id' => 'required|exists:users,user_id', // Ensure user exists
+         ]);
+     
+         $vehicleId = $request->vehicle_id;
+         $amount = $request->amount;
+         $userId = $request->user_id;
+     
+         try {
+             // Log the incoming request
+             Log::info('Received bid submission request', [
+                 'vehicle_id' => $vehicleId,
+                 'user_id' => $userId,
+                 'amount' => $amount,
+             ]);
+     
+             // Retrieve the vehicle
+             $vehicle = Vehicle::find($vehicleId);
+             if (!$vehicle) {
+                 Log::warning('Vehicle not found', ['vehicle_id' => $vehicleId]);
+                 return response()->json(['error' => 'Vehicle not found'], 404);
+             }
+     
+             // Get the highest bid or fallback to vehicle price
+             $highestBid = Bid::where('vehicle_id', $vehicleId)->max('bid_amount') ?? $vehicle->price;
+     
+             // Validate bid amount
+             if ($amount <= $highestBid) {
+                 Log::warning('Invalid bid amount', [
+                     'vehicle_id' => $vehicleId,
+                     'user_id' => $userId,
+                     'amount' => $amount,
+                     'highest_bid' => $highestBid,
+                 ]);
+                 return response()->json([
+                     'error' => 'Bid must be higher than the current highest bid of ' . $highestBid,
+                 ], 422);
+             }
+     
+             // Check for existing bid by the same user
+             $existingBid = Bid::where('vehicle_id', $vehicleId)->where('bidder_id', $userId)->first();
+             if ($existingBid) {
+                 // Update the existing bid
+                 $existingBid->update(['bid_amount' => $amount]);
+     
+                 Log::info('Bid updated successfully', [
+                     'vehicle_id' => $vehicleId,
+                     'user_id' => $userId,
+                     'bid_id' => $existingBid->bid_id,
+                     'amount' => $amount,
+                 ]);
+     
+                 // Create a notification for the updated bid
+                 Notification::create([
+                     'user_id' => $userId,
+                     'message' => 'Your bid for ' . $vehicle->model . ' has been updated successfully.',
+                     'notification_type' => 'bid_update',
+                     'is_read' => false,
+                 ]);
+     
+                 return response()->json([
+                     'success' => true,
+                     'message' => 'Bid updated successfully',
+                     'bid' => $existingBid,
+                 ]);
+             }
+     
+             // Save the new bid
+             $bid = Bid::create([
+                 'vehicle_id' => $vehicleId,
+                 'bidder_id' => $userId,
+                 'bid_amount' => $amount,
+                 'bid_status' => 'active',
+             ]);
+     
+             Log::info('Bid placed successfully', [
+                 'vehicle_id' => $vehicleId,
+                 'user_id' => $userId,
+                 'bid_id' => $bid->bid_id,
+                 'amount' => $amount,
+             ]);
+     
+             // Create a notification for the new bid
+             Notification::create([
+                 'user_id' => $userId,
+                 'message' => 'Your bid for ' . $vehicle->model . ' has been placed successfully.',
+                 'notification_type' => 'bid_created',
+                 'is_read' => false,
+             ]);
+     
+             return response()->json([
+                 'success' => true,
+                 'message' => 'Bid placed successfully',
+                 'bid' => $bid,
+             ]);
+         } catch (\Exception $e) {
+             Log::error('Error placing bid', [
+                 'vehicle_id' => $vehicleId,
+                 'user_id' => $userId,
+                 'amount' => $amount,
+                 'error_message' => $e->getMessage(),
+             ]);
+     
+             return response()->json([
+                 'error' => 'An error occurred while placing the bid. Please try again later.',
+             ], 500);
+         }
+     }
     public function getVehicleBids($vehicle_id)
     {
         Log::info('Fetching vehicle bids', ['vehicle_id' => $vehicle_id]);

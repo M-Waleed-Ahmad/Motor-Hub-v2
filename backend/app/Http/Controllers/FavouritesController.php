@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Favourites;
+use App\Models\Vehicle;
 
 class FavouritesController extends Controller
 {
@@ -24,11 +25,13 @@ class FavouritesController extends Controller
             'user_id' => $request->user_id,
             'vehicle_id' => $request->vehicle_id,
         ]);
+        $vehicle_id=$request->vehicle_id;
+        Log::info('Favourite added', ['favourite' => $vehicle_id]);
 
-        Log::info('Favourite added', ['favourite' => $favourite]);
+        $vehicle = Vehicle::findOrFail($vehicle_id);
 
         $notification = \App\Models\Notification::create([
-            'user_id' => $user_id, 
+            'user_id' => $request->user_id, 
             'message' => 'You have added this ' . $vehicle->model . 'to your favourties successfully.',
             'notification_type' => 'favourites',
             'is_read' => false,
