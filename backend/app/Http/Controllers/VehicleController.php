@@ -111,6 +111,14 @@ class VehicleController extends Controller
                 ]);
     
                 Log::info('Vehicle image saved in the database.', ['vehicle_image_id' => $vehicleImage->id]);
+
+                $notification = \App\Models\Notification::create([
+                    'user_id' => $request->user, 
+                    'message' => 'You have uploaded the picture of ' . $vehicle->model . 'succuessfully.',
+                    'notification_type' => 'general',
+                    'is_read' => false,
+                ]);
+                
     
                 return response()->json([
                     'success' => true,

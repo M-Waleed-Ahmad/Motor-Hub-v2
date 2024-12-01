@@ -27,6 +27,14 @@ class FavouritesController extends Controller
 
         Log::info('Favourite added', ['favourite' => $favourite]);
 
+        $notification = \App\Models\Notification::create([
+            'user_id' => $user_id, 
+            'message' => 'You have added this ' . $vehicle->model . 'to your favourties successfully.',
+            'notification_type' => 'favourites',
+            'is_read' => false,
+        ]);
+        
+
         return response()->json(['success' => true, 'message' => 'Added to favourites', 'favourite' => $favourite]);
     }
     

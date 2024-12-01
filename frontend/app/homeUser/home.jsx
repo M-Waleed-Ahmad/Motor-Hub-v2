@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,26 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  FlatList,
+  Dimensions,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../../components/bottomNav'; // Import the BottomNav component
+
+const { width } = Dimensions.get('window');
 import {useRouter} from 'expo-router'
 
 const MotorHubScreen = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const bannerImages = [
+    'https://via.placeholder.com/350x150.png?text=Image+1', // Replace with actual image URLs
+    'https://via.placeholder.com/350x150.png?text=Image+2',
+    'https://via.placeholder.com/350x150.png?text=Image+3',
+  ];
+  const flatListRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const router = useRouter();
   // Fetch unread notifications count from AsyncStorage
   const fetchUnreadNotifications = async () => {
@@ -33,7 +45,26 @@ const MotorHubScreen = () => {
 
   useEffect(() => {
     fetchUnreadNotifications();
+
+    // Auto-scroll the carousel every 3 seconds
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % bannerImages.length;
+        flatListRef.current?.scrollToIndex({ animated: true, index: nextIndex });
+        return nextIndex;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
+
+  const renderBannerImage = ({ item }) => (
+    <Image
+      source={{ uri: item }}
+      style={styles.banner}
+      resizeMode="cover"
+    />
+  );
 
   return (
     <View style={styles.container}>
@@ -57,13 +88,20 @@ const MotorHubScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Advertisement Banner */}
-      <Image
-        source={{
-          uri: 'https://via.placeholder.com/350x150', // Replace with your actual image URL
+      {/* Advertisement Banner (Auto-Rotating Carousel) */}
+      <FlatList
+        ref={flatListRef}
+        data={bannerImages}
+        renderItem={renderBannerImage}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item, index) => index.toString()}
+        onMomentumScrollEnd={(event) => {
+          const contentOffsetX = event.nativeEvent.contentOffset.x;
+          const newIndex = Math.round(contentOffsetX / width);
+          setCurrentIndex(newIndex);
         }}
-        style={styles.banner}
-        resizeMode="cover"
       />
 
       {/* Create New Listing Button */}
@@ -133,11 +171,9 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   banner: {
-    width: '90%',
+    width,
     height: 150,
-    alignSelf: 'center',
     marginVertical: 16,
-    borderRadius: 10,
   },
   createListingButton: {
     backgroundColor: '#6C63FF',
