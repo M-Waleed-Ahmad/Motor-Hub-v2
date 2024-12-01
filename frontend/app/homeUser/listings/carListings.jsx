@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback ,useEffect} from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,10 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter, Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import BottomNav from '../../../components/bottomNav'; // Import BottomNav component
 
 export default function ProductListingsPage() {
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [activeTab, setActiveTab] = useState('Buy a Vehicle');
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
@@ -47,6 +49,26 @@ export default function ProductListingsPage() {
       setLoading(false);
     }
   }, [activeTab, availabilityFilter, vehicleTypeFilter, searchQuery]);
+
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+      const user = JSON.parse(userString);
+
+      if (user && user.unread_notifications_count !== undefined) {
+        setUnreadNotifications(user.unread_notifications_count);
+      } else {
+        console.error('Unread notifications count not found in user object.');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadNotifications();
+  }, []);
 
   // Filter vehicles based on various criteria
   const filterVehicles = useCallback(
@@ -191,33 +213,8 @@ export default function ProductListingsPage() {
         />
       )}
       
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Link href="/homeUser/profile">
-          <FontAwesome name="user" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/listings/carListings">
-          <FontAwesome name="car" size={30} color="#00b4d8" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/home">
-          <FontAwesome name="home" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/notifications">
-          <FontAwesome name="bell" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity >
-          <Link href="homeUser/settings" style={styles.forgotText}>
-          <FontAwesome name="cog" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation */}
+      <BottomNav unreadNotifications={unreadNotifications} />
 
       {/* Filter Modal */}
       <Modal

@@ -89,7 +89,14 @@ class AuthController extends Controller
             'notification_type' => 'general',
             'is_read' => false,
         ]);
-        
+
+        // Fetch count of the total unread notifications for this user
+        $unreadNotificationsCount = \App\Models\Notification::where('user_id', $user->user_id)
+            ->where('is_read', false)
+            ->count();
+        Log::info('User logged in successfully.', ['user_id' => $user->user_id]);
+        Log::info('Total unread notifications for user.', ['user_id' => $user->user_id, 'count' => $unreadNotificationsCount]);
+        $user->unread_notifications_count = $unreadNotificationsCount;
         // Return success response with the token
         return response()->json([
             'message' => 'Login successful.',

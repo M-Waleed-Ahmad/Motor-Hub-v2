@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { Link } from 'expo-router';
+import BottomNav from '../../../components/bottomNav'; // Import the BottomNav component
+
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -25,6 +27,28 @@ export default function ProfilePage() {
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  // Fetch unread notifications count from AsyncStorage
+  const fetchUnreadNotifications = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+      const user = JSON.parse(userString);
+
+      if (user && user.unread_notifications_count !== undefined) {
+        setUnreadNotifications(user.unread_notifications_count);
+      } else {
+        console.error('Unread notifications count not found in user object.');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadNotifications();
+  }, []);
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -234,33 +258,8 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
 
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Link href="/homeUser/profile">
-            <FontAwesome name="user" size={30} color="#00b4d8" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/listings/carListings">
-            <FontAwesome name="car" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/home">
-            <FontAwesome name="home" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/notifications">
-            <FontAwesome name="bell" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/settings">
-            <FontAwesome name="cog" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation */}
+      <BottomNav unreadNotifications={unreadNotifications} />
     </View>
   );
 }

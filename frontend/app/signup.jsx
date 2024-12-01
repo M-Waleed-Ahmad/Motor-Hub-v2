@@ -43,7 +43,7 @@ const SignUpScreen = () => {
           email,
           password,
           password_confirmation: confirmPassword,
-          contact_number: contactNumber,
+          phone_number: contactNumber,
         },
         {
           headers: {

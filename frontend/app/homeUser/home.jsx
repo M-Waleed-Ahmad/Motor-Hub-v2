@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,33 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons'; // For icons, install expo/vector-icons
+import { FontAwesome } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import BottomNav from '../../components/bottomNav'; // Import the BottomNav component
 
 const MotorHubScreen = () => {
-  const router = useRouter();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-  const goToSettings = () => {
-    router.replace("/homeUser/settings");
-  }
-  const navigatetoCreate = ()=>{
-    router.replace("/homeUser/listings/createNewListing");
-  }
+  // Fetch unread notifications count from AsyncStorage
+  const fetchUnreadNotifications = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+      const user = JSON.parse(userString);
+
+      if (user && user.unread_notifications_count !== undefined) {
+        setUnreadNotifications(user.unread_notifications_count);
+      } else {
+        console.error('Unread notifications count not found in user object.');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadNotifications();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -53,15 +66,16 @@ const MotorHubScreen = () => {
       />
 
       {/* Create New Listing Button */}
-      <TouchableOpacity style={styles.createListingButton} onPress={navigatetoCreate}>
-        <Link href="/homeUser/listings/createNewListing">
+      <TouchableOpacity
+        style={styles.createListingButton}
+        onPress={() => console.log('Navigate to Create New Listing')}
+      >
         <Text style={styles.createListingText}>Create New Listing</Text>
-        </Link>
       </TouchableOpacity>
 
       {/* Categories */}
       <View style={styles.categoryContainer}>
-        {[ // Update labels/icons as needed
+        {[
           { label: 'Sedans', icon: '🚗' },
           { label: 'SUVs', icon: '🚙' },
           { label: 'Trucks', icon: '🚚' },
@@ -79,33 +93,7 @@ const MotorHubScreen = () => {
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Link href="/homeUser/profile">
-          <FontAwesome name="user" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/listings/carListings">
-          <FontAwesome name="car" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/home">
-          <FontAwesome name="home" size={30} color="#00b4d8" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Link href="/homeUser/notifications">
-          <FontAwesome name="bell" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-        <TouchableOpacity >
-          <Link href="homeUser/settings" style={styles.forgotText}>
-          <FontAwesome name="cog" size={30} color="white" />
-          </Link>
-        </TouchableOpacity>
-      </View>
+      <BottomNav unreadNotifications={unreadNotifications} />
     </View>
   );
 };
@@ -113,7 +101,7 @@ const MotorHubScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000', // Black background
+    backgroundColor: '#000',
   },
   header: {
     backgroundColor: '#121212',
@@ -188,13 +176,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     textAlign: 'center',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#121212',
-    paddingVertical: 1,
   },
 });
 
