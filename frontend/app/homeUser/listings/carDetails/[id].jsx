@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
+import { BASE_URL } from '../../../../utils/config';
 const VehicleDetails = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // Get vehicle ID from query params
@@ -18,7 +18,7 @@ const VehicleDetails = () => {
   useEffect(() => {
     const fetchVehicleDetails = async () => {
       try {
-        const response = await fetch(`http://192.168.18.225:8000/vehicle/${id}`); // Replace with your API endpoint
+        const response = await fetch(`${BASE_URL}/vehicle/${id}`); // Replace with your API endpoint
         if (!response.ok) {
           throw new Error('Failed to fetch vehicle details');
         }
@@ -71,7 +71,7 @@ const VehicleDetails = () => {
       const userString = await AsyncStorage.getItem('user'); // Get the logged-in user's ID
       const user = JSON.parse(userString);
       const userId = user.user_id;
-      const response = await fetch(`http://192.168.18.225:8000/favourites?user_id=${userId}&vehicle_id=${id}`);
+      const response = await fetch(`${BASE_URL}/favourites?user_id=${userId}&vehicle_id=${id}`);
       const data = await response.json();
       console.log('Fetched favorite status:', data);
       setIsFavorite(data.is_favorite);
@@ -86,12 +86,12 @@ const VehicleDetails = () => {
       const user = JSON.parse(userString);
       const userId = user.user_id;
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
       if (isFavorite) {
         // Remove from favorites
-        await axios.delete(`http://192.168.18.225:8000/favourites`, {
+        await axios.delete(`${BASE_URL}/favourites`, {
           params: {
             user_id: userId,
             vehicle_id: id,
@@ -107,7 +107,7 @@ const VehicleDetails = () => {
       } else {
         // Add to favorites
         await axios.post(
-          `http://192.168.18.225:8000/favourites`,
+          `${BASE_URL}/favourites`,
           {
             user_id: userId,
             vehicle_id: id,
@@ -130,9 +130,9 @@ const VehicleDetails = () => {
 
   const handleDeleteVehicle = async () => {
     try {
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
-      await axios.delete(`http://192.168.18.225:8000/vehicle/${id}`, {
+      await axios.delete(`${BASE_URL}/vehicle/${id}`, {
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,

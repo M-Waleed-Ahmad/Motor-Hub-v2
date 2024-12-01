@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
+import { BASE_URL } from '../../../../utils/config';
 const PaymentDetails = () => {
   const router = useRouter();
   const { method } = useLocalSearchParams();
@@ -49,11 +49,11 @@ const PaymentDetails = () => {
       setLoading(true);
 
       // Fetch CSRF token
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
 
       const response = await axios.post(
-        'http://192.168.18.225:8000/make-payment',
+        `${BASE_URL}/make-payment`,
         {
           payment_method:method,
           vehicle_id: vehicle.vehicle_id, // Assuming vehicle_id is in the vehicle object

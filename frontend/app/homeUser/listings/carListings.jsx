@@ -15,7 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter, Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../../../components/bottomNav'; // Import BottomNav component
-
+import { BASE_URL } from '../../../utils/config'; // Import the base URL
 export default function ProductListingsPage() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [activeTab, setActiveTab] = useState('Buy a Vehicle');
@@ -36,7 +36,7 @@ export default function ProductListingsPage() {
       const userString = await AsyncStorage.getItem('user');
       const user = JSON.parse(userString);
       const user_id = user.user_id;
-      const response = await fetch(`http://192.168.18.225:8000/vehicles?user_id=${user_id}`);
+      const response = await fetch(`${BASE_URL}/vehicles?user_id=${user_id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch vehicles');
       }

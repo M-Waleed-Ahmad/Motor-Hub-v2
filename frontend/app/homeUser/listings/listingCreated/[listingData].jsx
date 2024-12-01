@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Link, useLocalSearchParams } from 'expo-router';
-
+import { BASE_URL } from '../../../../utils/config';
 const ListingCreated = () => {
   const { listingData: vehicle_id } = useLocalSearchParams(); // Extract vehicle_id from params
   const [listingData, setListingData] = useState(null);
@@ -12,7 +12,7 @@ const ListingCreated = () => {
     const fetchListingData = async () => {
       try {
         // Fetch vehicle details from backend
-        const response = await fetch(`http://192.168.18.225:8000/vehicle/${vehicle_id}`);
+        const response = await fetch(`${BASE_URL}/vehicle/${vehicle_id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch listing data');
         }

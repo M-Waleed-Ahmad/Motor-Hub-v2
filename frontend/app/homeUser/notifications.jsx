@@ -55,7 +55,7 @@ export default function NotificationsPage() {
 
       console.log('Fetching notifications for user ID:', userId);
       const response = await axios.get(
-        `http://192.168.18.225:8000/notifications?user_id=${userId}`
+        `${BASE_URL}/notifications?user_id=${userId}`
       );
       console.log('Notifications:', response.data); 
       const sortedNotifications = response.data.sort(
@@ -71,14 +71,14 @@ export default function NotificationsPage() {
 
   const handleClearAll = async () => {
     try {
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       const userString = await AsyncStorage.getItem('user');
       const user = JSON.parse(userString);
       const userId = user?.user_id;
       console.log('Clearing all notifications for user ID:', userId);
       console.log('CSRF Token:', csrfToken);
-      await axios.post(`http://192.168.18.225:8000/notifications/clear-all`,
+      await axios.post(`${BASE_URL}/notifications/clear-all`,
         {
           user_id: userId,
         },
@@ -99,11 +99,11 @@ export default function NotificationsPage() {
   const handleMarkAsRead = async (notificationId) => {
     try {
 
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
       await axios.post(
-        `http://192.168.18.225:8000/notifications/mark-as-read`,
+        `${BASE_URL}/notifications/mark-as-read`,
         {
           notification_id: notificationId,
         },
@@ -132,12 +132,12 @@ export default function NotificationsPage() {
       const userString = await AsyncStorage.getItem('user');
       const user = JSON.parse(userString);
       const userId = user?.user_id;
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
       console.log('Marking all notifications as read for user ID:', userId);
       await axios.post(
-        `http://192.168.18.225:8000/notifications/mark-all-as-read`,
+        `${BASE_URL}/notifications/mark-all-as-read`,
         {
           user_id: userId,
         },
@@ -162,11 +162,11 @@ export default function NotificationsPage() {
 
   const handleDeleteNotification = async (notificationId) => {
     try {
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
       await axios.post(
-        `http://192.168.18.225:8000/notifications/remove`
+        `${BASE_URL}/notifications/remove`
         ,
         {
           notification_id: notificationId,

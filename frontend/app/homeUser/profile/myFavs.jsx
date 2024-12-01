@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Image, M
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { BASE_URL } from '../../../utils/config'; // Import the base URL
 export default function ProductListingsPage() {
   const [activeTab, setActiveTab] = useState('For Buy');
   const [favorites, setFavorites] = useState([]);
@@ -22,7 +22,7 @@ export default function ProductListingsPage() {
       const user = JSON.parse(userString);
       const userId = user?.user_id;
       if (userId) {
-        const response = await fetch(`http://192.168.18.225:8000/getFavourites?user_id=${userId}`);
+        const response = await fetch(`${BASE_URL}/getFavourites?user_id=${userId}`);
         const data = await response.json();
         if (data.success) {
           setFavorites(data.favourites);

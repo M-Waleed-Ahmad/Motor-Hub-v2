@@ -13,7 +13,7 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
-
+import { BASE_URL } from '../../../utils/config';
 export default function EditUsers() {
   const router = useRouter();
 
@@ -30,7 +30,7 @@ export default function EditUsers() {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get('http://192.168.18.225:8000/admin/users');
+        const response = await axios.get(`${BASE_URL}/admin/users`);
         setUsers(response.data);
         setFilteredUsers(response.data);
       } catch (err) {
@@ -73,12 +73,12 @@ export default function EditUsers() {
     setLoading(true);
     try {
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
 
       await axios.put(
-        `http://192.168.18.225:8000/admin/users/${selectedUser.user_id}`,
+        `${BASE_URL}/admin/users/${selectedUser.user_id}`,
       {
          full_name:selectedUser.full_name,
           email:selectedUser.email,

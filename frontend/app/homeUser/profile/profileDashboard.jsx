@@ -17,7 +17,7 @@ import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { Link } from 'expo-router';
 import BottomNav from '../../../components/bottomNav'; // Import the BottomNav component
-
+import { BASE_URL } from '../../../utils/config'; // Import the base URL
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -80,11 +80,11 @@ export default function ProfilePage() {
       setLoading(true);
       // Step 1: Fetch CSRF Token
       console.log('Fetching CSRF Token...');
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
       console.log('CSRF Token:', csrfToken);
   
-    const response = await axios.post('http://192.168.18.225:8000/updateProfile', {
+    const response = await axios.post(`${BASE_URL}/updateProfile`, {
       user_id: userInfo.user_id,
       [editingField]: tempValue,
     },
@@ -137,11 +137,11 @@ export default function ProfilePage() {
         setLoading(true);
         // Step 1: Fetch CSRF Token
         console.log('Fetching CSRF Token...');
-        const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+        const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
         const csrfToken = csrfResponse.data.csrf_token;
         console.log('CSRF Token:', csrfToken);
   
-        const response = await axios.post('http://192.168.18.225:8000/updateProfileImage', formData, {
+        const response = await axios.post(`${BASE_URL}/updateProfileImage`, formData, {
           headers: { 'Content-Type': 'multipart/form-data',
             'X-CSRF-TOKEN': csrfToken,
             'X-Requested-With': 'XMLHttpRequest',

@@ -26,7 +26,7 @@ export default function BidDetailsPage() {
     setLoading(true);
     console.log('Fetching bids for vehicle:', id);
     try {
-      const response = await axios.get(`http://192.168.18.225:8000/getBids/${id}`);
+      const response = await axios.get(`${BASE_URL}/getBids/${id}`);
       const data = response.data;
 
       if (data.vehicle) {
@@ -49,11 +49,11 @@ export default function BidDetailsPage() {
   // Approve a bid for the vehicle
   const approveBid = async (bidId) => {
     try {
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
 
       const response = await axios.post(
-        `http://192.168.18.225:8000/approveBid`,
+        `${BASE_URL}/approveBid`,
         { bid_id: bidId, id: id },
         {
           headers: {
@@ -79,11 +79,11 @@ export default function BidDetailsPage() {
   // Close the bidding for the vehicle
   const closeBid = async () => {
     try {
-      const csrfResponse = await axios.get('http://192.168.18.225:8000/csrf-token');
+      const csrfResponse = await axios.get(`${BASE_URL}/csrf-token`);
       const csrfToken = csrfResponse.data.csrf_token;
 
       const response = await axios.post(
-        `http://192.168.18.225:8000/closeBid`,
+       `${BASE_URL}/closeBid`,
         { id: id },
         {
           headers: {

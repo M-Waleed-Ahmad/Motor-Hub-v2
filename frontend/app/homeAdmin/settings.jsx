@@ -11,7 +11,7 @@ import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
+import { BASE_URL } from '../../utils/config';
 const SettingsScreen = () => {
   const settingsOptions = [
     { label: 'Location', icon: 'map-marker' },
@@ -29,7 +29,7 @@ const SettingsScreen = () => {
     try {
       // Step 1: Make a POST request to the logout endpoint
       console.log('Logging out...');
-      const response = await axios.post('http://192.168.18.225:8000/logout');
+      const response = await axios.post(`${BASE_URL}/logout`);
   
       console.log('Logout Response:', response.data);
   

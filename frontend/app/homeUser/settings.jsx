@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import BottomNav from '../../components/bottomNav'; // Import BottomNav component
+import { BASE_URL } from '../../utils/config'; // Import the base URL
 
 const SettingsScreen = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -31,7 +32,7 @@ const SettingsScreen = () => {
   const handleLogout = async () => {
     try {
       console.log('Logging out...');
-      const response = await axios.post('http://192.168.18.225:8000/logout');
+      const response = await axios.post(`${BASE_URL}/logout`);
 
       console.log('Logout Response:', response.data);
 
