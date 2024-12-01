@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TextInput
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -13,19 +14,138 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import BottomNav from '../../components/bottomNav'; // Import BottomNav component
 import { BASE_URL } from '../../utils/config'; // Import the base URL
+import MapView, { Marker } from 'react-native-maps'; // Import MapView
 
 const SettingsScreen = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [openSections, setOpenSections] = useState({}); // Tracks which sections are open
+  const [paymentMethod, setPaymentMethod] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: ''
+  });
+  const [passwords, setPasswords] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmNewPassword: ''
+  });
   const router = useRouter();
 
   const settingsOptions = [
-    { label: 'Location', icon: 'map-marker', content: 'Manage your location settings here.' },
-    { label: 'Payment Method', icon: 'credit-card', content: 'Update your payment methods.' },
-    { label: 'Passwords', icon: 'eye', content: 'Change your passwords securely.' },
+    {
+      label: 'Location',
+      icon: 'map-marker',
+      content: (
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: 37.78825, // Default latitude
+              longitude: -122.4324, // Default longitude
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          >
+            {/* Add a marker */}
+            <Marker
+              coordinate={{ latitude: 37.78825, longitude: -122.4324 }}
+              title="Default Location"
+              description="This is a sample marker."
+            />
+          </MapView>
+        </View>
+      ),
+    },
+    {
+      label: 'Payment Method',
+      icon: 'credit-card',
+      content: (
+        <View style={styles.paymentMethodForm}>
+          <Text style={styles.paymentMethodTitle}>Add Payment Method</Text>
+          <TextInput
+            style={styles.inputField}
+            placeholder="Card Number"
+            value={paymentMethod.cardNumber}
+            onChangeText={(text) => setPaymentMethod({ ...paymentMethod, cardNumber: text })}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Expiry Date (MM/YY)"
+            value={paymentMethod.expiryDate}
+            onChangeText={(text) => setPaymentMethod({ ...paymentMethod, expiryDate: text })}
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.inputField}
+            placeholder="CVV"
+            value={paymentMethod.cvv}
+            onChangeText={(text) => setPaymentMethod({ ...paymentMethod, cvv: text })}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity style={styles.submitButton} onPress={handlePaymentSubmit}>
+            <Text style={styles.submitButtonText}>Add Payment Method</Text>
+          </TouchableOpacity>
+        </View>
+      ),
+    },
+    {
+      label: 'Passwords',
+      icon: 'eye',
+      content: (
+        <View style={styles.passwordForm}>
+          <Text style={styles.passwordTitle}>Change Password</Text>
+          <TextInput
+            style={styles.inputField}
+            placeholder="Old Password"
+            secureTextEntry
+            value={passwords.oldPassword}
+            onChangeText={(text) => setPasswords({ ...passwords, oldPassword: text })}
+          />
+          <TextInput
+            style={styles.inputField}
+            placeholder="New Password"
+            secureTextEntry
+            value={passwords.newPassword}
+            onChangeText={(text) => setPasswords({ ...passwords, newPassword: text })}
+          />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Confirm New Password"
+            secureTextEntry
+            value={passwords.confirmNewPassword}
+            onChangeText={(text) => setPasswords({ ...passwords, confirmNewPassword: text })}
+          />
+          <TouchableOpacity style={styles.submitButton} onPress={handlePasswordChange}>
+            <Text style={styles.submitButtonText}>Change Password</Text>
+          </TouchableOpacity>
+        </View>
+      ),
+    },
     { label: 'Security', icon: 'lock', content: 'Adjust security settings.' },
-    { label: 'About', icon: 'info-circle', content: 'Learn more about this app.' },
-    { label: 'Help and Support', icon: 'headphones', content: 'Get help and support.' },
+    {
+      label: 'About',
+      icon: 'info-circle',
+      content: (
+        <View style={styles.aboutContainer}>
+          <Text style={styles.aboutText}>
+            MOTORHUB is your trusted online platform for buying and selling cars, offering a seamless
+            experience with a wide selection of vehicles to choose from. Whether you're looking to buy
+            your dream car or sell your current one, MOTORHUB makes the process fast, secure, and
+            hassle-free.
+          </Text>
+        </View>
+      ),
+    },
+    {
+      label: 'Help and Support',
+      icon: 'headphones',
+      content: (
+        <View style={styles.helpSupportContainer}>
+          <Text style={styles.helpSupportText}>Contact Us: 042-XXX-XXXXX</Text>
+        </View>
+      ),
+    },
     { label: 'Rules of Service', icon: 'book', content: 'Read the rules of service.' },
   ];
 
@@ -34,6 +154,7 @@ const SettingsScreen = () => {
       ...prevState,
       [index]: !prevState[index], // Toggle the visibility of the section
     }));
+    console.log(`Toggling section ${index}, open: ${!openSections[index]}`); // Debugging log
   };
 
   const handleLogout = async () => {
@@ -70,6 +191,47 @@ const SettingsScreen = () => {
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
+    }
+  };
+
+  const handlePaymentSubmit = () => {
+    if (!paymentMethod.cardNumber || !paymentMethod.expiryDate || !paymentMethod.cvv) {
+      Alert.alert('Incomplete Information', 'Please fill in all fields.');
+      return;
+    }
+
+    // Here you would typically send the payment information to your server
+    console.log('Submitting payment method:', paymentMethod);
+    Alert.alert('Payment Method Added', 'Your payment method has been added successfully.');
+  };
+
+  const handlePasswordChange = async () => {
+    const { oldPassword, newPassword, confirmNewPassword } = passwords;
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      Alert.alert('Missing Fields', 'Please fill in all fields.');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      Alert.alert('Password Mismatch', 'The new password and confirmation do not match.');
+      return;
+    }
+
+    try {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const response = await axios.post(
+        `${BASE_URL}/change-password`,
+        { oldPassword, newPassword },
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+        }
+      );
+      console.log('Password Change Response:', response.data);
+      Alert.alert('Password Changed', 'Your password has been updated successfully.');
+    } catch (error) {
+      console.error('Password Change Error:', error.response?.data || error);
+      Alert.alert('Password Change Failed', 'Something went wrong. Please try again.');
     }
   };
 
@@ -111,11 +273,8 @@ const SettingsScreen = () => {
                 style={styles.chevronIcon}
               />
             </TouchableOpacity>
-            {openSections[index] && (
-              <View style={styles.dropdownContent}>
-                <Text style={styles.dropdownText}>{option.content}</Text>
-              </View>
-            )}
+
+            {openSections[index] && <View style={styles.dropdownContent}>{option.content}</View>}
           </View>
         ))}
       </ScrollView>
@@ -129,7 +288,7 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000', // Black background
+    backgroundColor: '#121212',
   },
   header: {
     marginTop: 6,
@@ -182,9 +341,61 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 8,
   },
-  dropdownText: {
-    color: '#aaa',
-    fontSize: 14,
+  mapContainer: {
+    height: 200,
+    width: '100%',
+  },
+  map: {
+    flex: 1,
+  },
+  paymentMethodForm: {
+    padding: 15,
+  },
+  paymentMethodTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  inputField: {
+    backgroundColor: '#333',
+    color: '#fff',
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 8,
+  },
+  submitButton: {
+    backgroundColor: '#6C63FF',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  passwordForm: {
+    padding: 15,
+  },
+  passwordTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  helpSupportContainer: {
+    padding: 15,
+  },
+  helpSupportText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  aboutContainer: {
+    padding: 15,
+  },
+  aboutText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
