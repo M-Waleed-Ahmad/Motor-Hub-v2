@@ -115,10 +115,10 @@ class VehicleController extends Controller
                 $notification = \App\Models\Notification::create([
                     'user_id' => $request->user, 
                     'message' => 'You have uploaded the picture of ' . $vehicle->model . 'succuessfully.',
-                    'notification_type' => 'general',
+                    'notification_type' => 'new_listing',
                     'is_read' => false,
                 ]);
-                
+                Log::info('Notification created successfully.', ['notification_id' => $notification->id]);
     
                 return response()->json([
                     'success' => true,
