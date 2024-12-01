@@ -23,7 +23,6 @@ class User extends Authenticatable
         'email',
         'password_hash',
         'phone_number',
-        'is_approved', // Add this field
         'address',
         'profile_image',
         'user_type',

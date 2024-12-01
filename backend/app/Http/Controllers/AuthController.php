@@ -22,10 +22,10 @@ class AuthController extends Controller
             'phone_number' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
+        Log::info('User registered successfully.', ['user' => $request->full_name]);
 
         // Create the user
 
@@ -36,6 +36,13 @@ class AuthController extends Controller
             'phone_number' => $request->phone_number,
             'user_type' => 'user', // Default type
             'is_approved' => 0, // Not approved by default
+        ]);
+        // Generate a notification
+        $notification = \App\Models\Notification::create([
+            'user_id' => $user->user_id,
+            'message' => 'Welcome TO Motor Hub.',
+            'notification_type' => 'general',
+            'is_read' => false,
         ]);
 
         // Return a success response
@@ -74,6 +81,15 @@ class AuthController extends Controller
         $user->profile_image = url('storage/profile_images/' . basename($user->profile_image));
         
         Log::info('User logged in successfully.', ['user_id' => $user]);
+        
+        // Generate a notification
+        $notification = \App\Models\Notification::create([
+            'user_id' => $user->user_id,
+            'message' => 'You have successfully logged in.',
+            'notification_type' => 'general',
+            'is_read' => false,
+        ]);
+        
         // Return success response with the token
         return response()->json([
             'message' => 'Login successful.',
@@ -81,7 +97,7 @@ class AuthController extends Controller
             'user' => $user,
         ], 200);
     }
-    
+  
     public function logout(Request $request)
     {
         // For simplicity, assume the token is just deleted client-side
