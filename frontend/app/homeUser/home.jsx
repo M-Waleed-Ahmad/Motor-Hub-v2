@@ -18,10 +18,10 @@ import {useRouter} from 'expo-router'
 
 const MotorHubScreen = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const bannerImages = [
-    'https://via.placeholder.com/350x150.png?text=Image+1', // Replace with actual image URLs
-    'https://via.placeholder.com/350x150.png?text=Image+2',
-    'https://via.placeholder.com/350x150.png?text=Image+3',
+  const bannerImages = [ 
+    require('../../assets/images/banner1.jpg'), // Replace with your actual image paths
+    require('../../assets/images/banner1.jpg'), // Replace with your actual image paths
+    require('../../assets/images/banner1.jpg'), // Replace with your actual image paths
   ];
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -60,11 +60,21 @@ const MotorHubScreen = () => {
 
   const renderBannerImage = ({ item }) => (
     <Image
-      source={{ uri: item }}
+      source={item} // Pass the item directly
       style={styles.banner}
       resizeMode="cover"
     />
   );
+  
+  const handleCategorySelect = async (category) => {
+    try {
+      console.log('Selected category:', category);
+      await AsyncStorage.setItem('selectedCategory', category);
+      router.push('/homeUser/listings'); // Navigate to Product Listings page
+    } catch (error) {
+      console.error('Error storing category:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -75,18 +85,7 @@ const MotorHubScreen = () => {
         </Text>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <FontAwesome name="bars" size={24} color="white" style={styles.menuIcon} />
-        <TextInput
-          placeholder="Hinted search text"
-          style={styles.searchInput}
-          placeholderTextColor="#aaa"
-        />
-        <TouchableOpacity>
-          <FontAwesome name="search" size={20} color="#aaa" />
-        </TouchableOpacity>
-      </View>
+    
 
       {/* Advertisement Banner (Auto-Rotating Carousel) */}
       <FlatList
@@ -124,7 +123,7 @@ const MotorHubScreen = () => {
           { label: 'New', icon: '🆕' },
           { label: 'Used', icon: '♻' },
         ].map((category, index) => (
-          <TouchableOpacity key={index} style={styles.categoryItem}>
+          <TouchableOpacity onPress={() => handleCategorySelect(category.label)} key={index} style={styles.categoryItem}>
             <Text style={styles.categoryIcon}>{category.icon}</Text>
             <Text style={styles.categoryLabel}>{category.label}</Text>
           </TouchableOpacity>
@@ -141,6 +140,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+    marginTop: 30,
   },
   header: {
     backgroundColor: '#121212',
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     width,
-    height: 150,
+    height: 250,
     marginVertical: 16,
   },
   createListingButton: {

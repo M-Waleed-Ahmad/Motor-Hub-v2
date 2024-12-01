@@ -29,27 +29,38 @@ export default function ProductListingsPage() {
   const [modalVisible, setModalVisible] = useState(false); // Control modal visibility
   const router = useRouter();
 
+
+
   // Fetch vehicles
   const fetchVehicles = useCallback(async () => {
     try {
       setLoading(true);
       const userString = await AsyncStorage.getItem('user');
       const user = JSON.parse(userString);
+      const selectedCategory = await AsyncStorage.getItem('selectedCategory');
       const user_id = user.user_id;
+  
       const response = await fetch(`${BASE_URL}/vehicles?user_id=${user_id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch vehicles');
       }
+  
       const data = await response.json();
       setVehicles(data);
-      filterVehicles(data, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery);
+  
+      // Pre-apply the vehicle type filter
+      if (selectedCategory) {
+        setVehicleTypeFilter(selectedCategory.toLowerCase());
+        filterVehicles(data, activeTab, availabilityFilter, selectedCategory.toLowerCase(), searchQuery);
+      } else {
+        filterVehicles(data, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery);
+      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
     } finally {
       setLoading(false);
     }
-  }, [activeTab, availabilityFilter, vehicleTypeFilter, searchQuery]);
-
+  }, [activeTab, availabilityFilter, vehicleTypeFilter, searchQuery, filterVehicles]);
 
   const fetchUnreadNotifications = async () => {
     try {
@@ -74,24 +85,24 @@ export default function ProductListingsPage() {
   const filterVehicles = useCallback(
     (vehicles, tab, availability, type, query) => {
       let filtered = vehicles;
-
+  
       // Filter by listing type
       if (tab === 'Buy a Vehicle') {
         filtered = filtered.filter((vehicle) => vehicle.listing_type === 'sale');
       } else if (tab === 'Rent a Vehicle') {
         filtered = filtered.filter((vehicle) => vehicle.listing_type === 'rent');
       }
-
+  
       // Filter by availability
       if (availability !== 'all') {
         filtered = filtered.filter((vehicle) => vehicle.availability_status === availability);
       }
-
+  
       // Filter by vehicle type
       if (type !== 'all') {
         filtered = filtered.filter((vehicle) => vehicle.vehicle_type === type);
       }
-
+  
       // Search by type and model
       if (query.trim() !== '') {
         filtered = filtered.filter(
@@ -100,11 +111,12 @@ export default function ProductListingsPage() {
             vehicle.model.toLowerCase().includes(query.toLowerCase())
         );
       }
-
+  
       setFilteredVehicles(filtered);
     },
     []
   );
+  
 
   const handleTabChange = useCallback(
     (tab) => {
@@ -131,7 +143,6 @@ export default function ProductListingsPage() {
       fetchVehicles();
     }, [fetchVehicles])
   );
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
