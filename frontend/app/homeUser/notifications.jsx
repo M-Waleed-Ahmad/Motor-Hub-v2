@@ -11,7 +11,7 @@ import { Link } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../../components/bottomNav'; // Import the BottomNav component
-
+import { BASE_URL } from '../../utils/config'; // Import the BASE_URL from config.js\
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);

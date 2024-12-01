@@ -50,6 +50,7 @@ export default function ProductListingsPage() {
       }
 
       const data = await response.json();
+      console.log('Vehicles:', data);
       setVehicles(data);
       filterVehicles(data, activeTab, availabilityFilter, vehicleTypeFilter, searchQuery);
     } catch (error) {
@@ -180,7 +181,7 @@ export default function ProductListingsPage() {
                 style={styles.productImage}
               />
               <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.name || 'Unnamed Vehicle'}</Text>
+                <Text style={styles.productName}>{item.images?.[0]?.image_url || 'Unnamed Vehicle'}</Text>
                 <View style={styles.rating}>
                   {Array.from({ length: 5 }, (_, i) => (
                     <FontAwesome

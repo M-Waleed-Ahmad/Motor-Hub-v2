@@ -10,10 +10,11 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../../components/bottomNav'; // Import the BottomNav component
+import {useRouter} from 'expo-router'
 
 const MotorHubScreen = () => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-
+  const router = useRouter();
   // Fetch unread notifications count from AsyncStorage
   const fetchUnreadNotifications = async () => {
     try {
@@ -68,7 +69,7 @@ const MotorHubScreen = () => {
       {/* Create New Listing Button */}
       <TouchableOpacity
         style={styles.createListingButton}
-        onPress={() => console.log('Navigate to Create New Listing')}
+        onPress={() => router.push(('/homeUser/listings/createNewListing'))}
       >
         <Text style={styles.createListingText}>Create New Listing</Text>
       </TouchableOpacity>
