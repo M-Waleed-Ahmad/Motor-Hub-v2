@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,6 +78,7 @@ const LoginScreen = () => {
       );
     }
   };
+  
   
   return (
     <ImageBackground
