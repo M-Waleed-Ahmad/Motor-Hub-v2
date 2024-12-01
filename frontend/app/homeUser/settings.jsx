@@ -122,7 +122,16 @@ const SettingsScreen = () => {
         </View>
       ),
     },
-    { label: 'Security', icon: 'lock', content: 'Adjust security settings.' },
+    { label: 'Security', 
+      icon: 'lock',
+      content: (
+        <View style={styles.aboutContainer}>
+          <Text style={styles.aboutText}>
+            END TO END ENCRYPTED
+          </Text>
+        </View>
+      )
+    },
     {
       label: 'About',
       icon: 'info-circle',
@@ -146,7 +155,36 @@ const SettingsScreen = () => {
         </View>
       ),
     },
-    { label: 'Rules of Service', icon: 'book', content: 'Read the rules of service.' },
+    { label: 'Rules of Service',
+       icon: 'book',
+       content: (
+        <View style={styles.aboutContainer}>
+          <Text style={styles.aboutText}>
+            Eligibility: Users must be at least 18 years old and legally able to enter agreements.
+
+            Account Responsibility: Users are responsible for the confidentiality and activity under their account.
+
+            Payment Policy: Payments must be made through approved methods, and MotorHub may cancel transactions in case of issues.
+
+            Prohibited Conduct: Fraud, spamming, and malicious activity are prohibited.
+
+            User Data: Personal data is collected and processed according to the privacy policy.
+
+            Product Listings: Sellers must provide accurate vehicle information; MotorHub does not verify listings.
+
+            Transaction Disputes: MotorHub attempts to mediate, but is not responsible for resolving disputes.
+
+            Returns and Refunds: Refunds are processed according to specific seller return policies.
+
+            Modification of Service: MotorHub can change, suspend, or terminate services without notice.
+
+            Indemnity: Users agree to hold MotorHub harmless from any claims or damages from their use of the platform.
+            
+            Termination of Service: Accounts may be suspended or terminated for policy violations or inactivity.
+          </Text>
+        </View>
+      ),
+      },
   ];
 
   const handleToggleSection = (index) => {
