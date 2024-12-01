@@ -71,6 +71,14 @@ class PaymentController extends Controller
             if ($isPaymentSuccessful) {
                 // Log successful payment
                 Log::info('Payment successful', ['payment_id' => $payment->id]);
+
+                $notification = \App\Models\Notification::create([
+                    'user_id' => $request->user_id, 
+                    'message' => 'Your payment has been completed successfully.',
+                    'notification_type' => 'payment',
+                    'is_read' => false,
+                ]);
+                
     
                 return response()->json([
                     'message' => 'Payment successful',
